@@ -101,19 +101,19 @@ Pdefn(\currentPtt, (Pseq(~euclid.value(~step, ~trig, ~rot), inf, 0).collect({|x|
 			~randomSeq.put(15, ~prob.coin.binaryValue);
 			x.asBoolean.or(~randomSeq[14].asBoolean).binaryValue;
 		})},
-		{~op == 1}, {if(~loop == 1, {~loopArray = ~loopArray.rotate(-1);
+		{~op == 2}, {if(~loop == 1, {~loopArray = ~loopArray.rotate(-1);
 			x.asBoolean.and(~loopArray[~step - 2].asBoolean).binaryValue;},
 		{~randomSeq = ~randomSeq.rotate(-1);
 			~randomSeq.put(15, ~prob.coin.binaryValue);
 			x.asBoolean.and(~randomSeq[14].asBoolean).binaryValue;
 		})},
-		{~op == 1}, {if(~loop == 1, {~loopArray = ~loopArray.rotate(-1);
+		{~op == 3}, {if(~loop == 1, {~loopArray = ~loopArray.rotate(-1);
 			x.asBoolean.xor(~loopArray[~step - 2].asBoolean).binaryValue;},
 		{~randomSeq = ~randomSeq.rotate(-1);
 			~randomSeq.put(15, ~prob.coin.binaryValue);
 			x.asBoolean.xor(~randomSeq[14].asBoolean).binaryValue;
 		})},
-		{~op == 1}, {if(~loop == 1, {~loopArray = ~loopArray.rotate(-1);
+		{~op == 4}, {if(~loop == 1, {~loopArray = ~loopArray.rotate(-1);
 			x.asBoolean.nand(~loopArray[~step - 2].asBoolean).binaryValue;},
 		{~randomSeq = ~randomSeq.rotate(-1);
 			~randomSeq.put(15, ~prob.coin.binaryValue);
