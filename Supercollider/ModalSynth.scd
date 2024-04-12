@@ -1,36 +1,56 @@
 s.boot
-//SinOsc.ar(2*pi*freq)* amp *EnvGen.kr(Env.perc(0.005, 4, 1, -4.5),doneAction: 2));
-(
-SynthDef(\Modal,{
-	var freq = ~freq;
-	var amp = ~amp;
-	var out ;
-	out = Klank.ar(`[freq,amp,nil],Impulse.ar(2,0,0.1));
-	Out.ar(0,Pan2.ar(out,0));
-}).add;
-)
+// This is essential for the synth to play
+s.options.numWireBufs = 512;
 
 (
 ~params = {
-	arg fundFreq, p_pose;
-	var n_harmonics = (20000/fundFreq).floor;
-
-	f = Array.fill(n_harmonics, {arg i; (i+1)*fundFreq});
-	a = Array.fill(n_harmonics, {arg i;
-		((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose)});
-    a = a.normalizeSum;
+	arg fundFreq, p_pose, stiffness = 0;
+	// here we just divide by 1000 to have more sensibility on the input number
+	var stiffness_small = stiffness/(1000);
+	// This is a constant detune that will be applied to each frequency mode except the fundamental
+	var detune = stiffness_small + (stiffness_small.squared);
+	// This is a part of the detuning that will depend on the frequency mode
+	var variable_part = pi.squared * stiffness_small.squared/8;
+	// Frequency array creation (here we apply the detuning to each frequency mode)
+	f = [fundFreq, Array.fill(249, {arg i; if( ((i+1)*fundFreq) < 20000,
+		{(i+2)*fundFreq * (1 + detune + ((i+1).squared * variable_part))},
+		{0}
+	)
+	})];
+	// Amplitude array creation
+	a = Array.fill(250, {arg i; if( ((i+1)*fundFreq) < 20000,
+		{((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose)},
+		{0}
+	)}
+	);
+	// We normalize the array amplitude so that the sum of all the sinusoids is 1 (we apply a -3dB attenuation)
+    a = a.normalizeSum * 0.5;
+	// return as an array both arrays
 	[a,f]
 };
 )
 
+// the SynthDef of the string
+(
+SynthDef(\Modal_2,{ |gate = 1|
+	var env, amp, freq, x;
+	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
+	amp = NamedControl.ar(\amp, Array.fill(250,{0}));
+	freq = NamedControl.ar(\freq , Array.fill(250,{0}));
+	env = EnvGen.kr(Env.perc(0.01, 2, 1, curve:-4), gate, doneAction: Done.freeSelf);
+	// All sine waves summed together
+	x = SinOsc.ar(freq, 0, amp).sum;
+	Out.ar(0,Pan2.ar(x * env,0));
+}).add;
+)
 
 (
-p = ~params.value(440,2);
-~freq = p[1];
-~amp = p[0];
-Synth(\Modal);
-
-//play({ Klank.ar(`[p[1],p[0],nil],Impulse.ar(2,0,0.1));})
+// play mode
+y = Synth(\Modal_2);
+p = ~params.value(180, 2, 11);
+y.setn(\freq, p[1]);
+y.setn(\amp, p[0]);
 )
 
 s.freqscope;
+
