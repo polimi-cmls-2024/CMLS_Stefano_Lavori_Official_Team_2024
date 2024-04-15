@@ -4,14 +4,14 @@ Server.killAll;
 (
 // Defining FM synthesis module
 SynthDef(\fm, {
-	arg midinote = 70, freq_mod = 110, vel = 1, amp_mod = 50, trig = 1;
+	arg midinote = 70, freq_mod = 250, vel = 1, amp_mod = 40, trig = 1;
 	var out, mod, sig, env;
 	// Modulation signal
 	mod = SinOsc.ar(freq_mod, mul:amp_mod);
 	// Envelope
-	env = EnvGen.kr(Env.perc(0.01, 0.3, 1, curve:-4), trig, doneAction: 2);
+	env = EnvGen.kr(Env.perc(0.01, 0.4, 1, curve:-7), trig, doneAction: 2);
 	// Output signal
-	sig = SinOsc.ar(midinote.midicps + mod, mul:vel);
+	sig = LFTri.ar(midinote.midicps + mod, mul:vel);
 
 	out = Out.ar(0, Pan2.ar(sig * env));
 }).add;
@@ -95,19 +95,34 @@ Ndef(\a, Pbind(
 // Total number of steps of Euclidean rhythm
 ~step = 16;
 // Number of triggers inside of the Euclidean rhythm
-~trig =7;
+~trig = 7;
 // Initial rotation
-~rot = 0;
+~rot = 2;
 // Probability bias of the random coin flip
-~prob = 0.1;
+~prob = 0.5;
 // Operator between Or, And, Xor, Nand
-~op = 1;
+~op = 3;
 // On/Off loop
-~loop = 1;
-~noteLoopOn = 1;
-~looplength = 16;
-~noteLoopLength = 16;
-~glide = ((60/(120*4)) - 0.025)*0;
+~loop = 0;
+~noteLoopOn = 0;
+~looplength = 8;
+~noteLoopLength = 8;
+~glide = ((60/(120*4)) - 0.030)*0;
+~standardDev = 5;
+~expVal = 60;
+~selectScale = 5;
+~scale = case(
+	{~selectScale == 1}, {Scale.chromatic},
+	{~selectScale == 2}, {Scale.major},
+	{~selectScale == 3}, {Scale.minor},
+	{~selectScale == 4}, {Scale.majorPentatonic},
+	{~selectScale == 5}, {Scale.minorPentatonic},
+	{~selectScale == 6}, {Scale.dorian},
+	{~selectScale == 7}, {Scale.lydian},
+	{~selectScale == 8}, {Scale.phrygian},
+	{~selectScale == 9}, {Scale.mixolidian},
+	{~selectScale == 10}, {Scale.iwato},
+);
 
 
 //Prima si crea una copia della sequenza randomica, poi si estrae una sezione lunga quanto la lunghezza del loop desiderato
@@ -177,16 +192,15 @@ Pdefn(\currentPtt, (Pseq(~euclid.value(~step, ~trig, ~rot), inf, 0).collect({|x|
 );
 })));
 
-// If I want a shorter loop of notes from the original one I get only a part of it
 ~noteLoopArray = ~noteArray.copyRange(0, ~noteLoopLength - 1);
-// This is for choosing the notes, we can choose to loop them indpendently from the triggers
-Pdefn(\newNote, (Pgauss(65, 5, inf).collect({|x|
+
+Pdefn(\newNote, (Pfuncn({
 	if(~noteLoopOn == 1,
 		{
 			// note loop is one
 			~noteLoopArray = ~noteLoopArray.rotate(-1);
 			// We quintize the notes to a scale
-			~actualNote = ~noteLoopArray[~noteLoopLength - 2].nearestInScale(Scale.minor, 12);
+			~actualNote = ~noteLoopArray[~noteLoopLength - 2].nearestInScale(~scale, 12);
 			if(~glide == 0,
 				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
 				{
@@ -203,17 +217,36 @@ Pdefn(\newNote, (Pgauss(65, 5, inf).collect({|x|
 		{
 			// Here We just update and rotate the note array with new notes
 			~noteArray = ~noteArray.rotate(-1);
-			~noteArray[31] = x;
-			~actualNote = ~noteArray[30].nearestInScale(Scale.minor, 12);
+			~noteArray[31] = if(~standardDev < 50, {~expVal.gauss(~standardDev).abs}, {if(0.5.coin, {30.gauss(55 - ~standardDev).abs}, {90.gauss(55 - ~standardDev).abs})});
+			~actualNote = ~noteArray[30].nearestInScale(~scale, 12);
+			if(~glide == 0,
+				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
+				{
+					~actualNote
+				},
+				{
+					// Here we do the glide from the previous note to the current one
+					Ndef(\glide, {
+						Line.kr(~noteArray[29], ~actualNote, ~glide, doneAction:2)
+					})
+				}
+			)
 		}
-	);
-})));
+	)
+}, inf)));
 
 )
 
 
-//~gli = Line.kr(~noteArray[29].midicps, ~actualNote.midicps, 1);
-//~gli = Line.kr(40, 550, 0.5);
+
+
+
+
+
+
+
+
+
 
 
 
