@@ -1,5 +1,92 @@
 s.boot;
 Server.killAll;
+s.options.numWireBufs = 450;
+s.reboot;
+
+
+(
+~amp = {
+	arg fundFreq, p_pose = 2, stiffness = 11;
+	var i = 0;
+	var n = 200;
+	//var n_harmonics = (20000/fundFreq).floor;
+	// here we just divide by 1000 to have more sensibility on the input number
+	var stiffness_small = stiffness/(1000);
+	// This is a constant detune that will be applied to each frequency mode except the fundamental
+	var detune = stiffness_small + (stiffness_small.squared);
+	// This is a part of the detuning that will depend on the frequency mode
+	var variable_part = pi.squared * stiffness_small.squared/8;
+	// Frequency array creation (here we apply the detuning to each frequency mode)
+	//f = [fundFreq, Array.fill(249, {arg i; if( ((i+1)*fundFreq) < 20000,
+	//	{(i+2)*fundFreq * (1 + detune + ((i+1).squared * variable_part))},
+	//	{0}
+	//)
+	//})];
+	// Amplitude array creation
+	//a = Array.fill(250, {arg i; if( ((i+1)*fundFreq) < 20000,
+	//	{((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose)},
+	//	{0}
+	//)}
+	//);
+	a = Array.fill(n,{0});
+    n.do({
+		a[i] =((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose);
+		i = i+1;
+	});
+	// We normalize the array amplitude so that the sum of all the sinusoids is 1 (we apply a -3dB attenuation)
+    a = a.normalizeSum * 0.5;
+	// return as an array both arrays
+	a;
+};
+
+~freq = {
+	arg fundFreq, p_pose = 2, stiffness = 0;
+	var i = 0;
+	var n = 200;
+	//var n_harmonics = (20000/fundFreq).floor;
+	// here we just divide by 1000 to have more sensibility on the input number
+	var stiffness_small = stiffness/(1000);
+	// This is a constant detune that will be applied to each frequency mode except the fundamental
+	var detune = stiffness_small + (stiffness_small.squared);
+	// This is a part of the detuning that will depend on the frequency mode
+	var variable_part = pi.squared * stiffness_small.squared/8;
+	// Frequency array creation (here we apply the detuning to each frequency mode)
+	//f = [fundFreq, Array.fill(249, {arg i; if( ((i+1)*fundFreq) < 20000,
+	//	{(i+2)*fundFreq * (1 + detune + ((i+1).squared * variable_part))},
+	//	{0}
+	//)
+	//})];
+	// Amplitude array creation
+	//a = Array.fill(250, {arg i; if( ((i+1)*fundFreq) < 20000,
+	//	{((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose)},
+	//	{0}
+	//)}
+	//);
+	f = Array.fill(n,{0});
+    n.do({
+		f[i] =(i+1)*fundFreq * (1 + detune + ((i+1).squared * variable_part));
+		i = i+1;
+	});
+	f[0]=fundFreq;
+	f;
+};
+)
+
+// the SynthDef of the string
+(
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 40, vel = 1|
+	var env, amp, freq, p, x;
+	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
+	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
+	//freq = NamedControl.ar(\freq , Array.fill(250,{0}));
+    amp = ~amp.value(midinote.midicps,5,11);
+    freq = ~freq.value(midinote.midicps,5,11);
+	env = EnvGen.kr(Env.perc(0.01, 1, 1, curve:-4), trig, doneAction: 2);
+	// All sine waves summed together
+	x = SinOsc.ar(freq, 0, amp).sum;
+	Out.ar(0,Pan2.ar(x * env,0));
+}).add;
+)
 
 (
 // Defining FM synthesis module
@@ -57,7 +144,7 @@ SynthDef(\fm, {
 
 (
 // BPM of the clock
-~bpm = 120;
+~bpm = 100;
 t = TempoClock(~bpm * 4 /60);
 // Ndef to contain the sequence implemented after and setting the clock
 Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
@@ -77,6 +164,37 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 ~modArray = Array.rand(32, 0, 200);
 ~actualMod = ~modArray[30];
 
+
+
+
+
+)
+
+
+(
+
+~step = 16;
+// Number of triggers inside of the Euclidean rhythm
+~trig = 10;
+// Initial rotation
+~rot = 0;
+~pattern = ~euclid.value(~step, ~trig, ~rot);
+// Probability bias of the random coin flip
+~prob = 0.2;
+// Operator between Or, And, Xor, Nand
+~op = 1;
+// On/Off loop
+~loop = 0;
+~looplength = 3;
+
+
+~standardDev = 10;
+~expVal = 60;
+~glide = 0;
+~noteLoopOn = 0;
+~noteLoopLength = 16;
+~selectScale = 10;
+
 ~scale = case(
 	{~selectScale == 1}, {Scale.chromatic},
 	{~selectScale == 2}, {Scale.major},
@@ -90,45 +208,16 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 	{~selectScale == 10}, {Scale.iwato},
 );
 
-
-
-)
-
-
-(
-
-~step = 8;
-// Number of triggers inside of the Euclidean rhythm
-~trig = 3;
-// Initial rotation
-~rot = 0;
-// Probability bias of the random coin flip
-~prob = 0.2;
-// Operator between Or, And, Xor, Nand
-~op = 3;
-// On/Off loop
-~loop = 1;
-~looplength = 3;
-
-
-~standardDev = 3;
-~expVal = 55;
-~glide = 0.2;
-~noteLoopOn = 1;
-~noteLoopLength = 16;
-~selectScale = 8;
-
-
 ~velStandardDev = 0.2;
 ~velExpVal = 0.4;
-~velocityLoop = 0;
+~velocityLoop = 1;
 ~velocityLoopLength = 16;
 
 
 ~modStandardDev = 20;
 ~modExpVal = 30;
 ~interpol = 1;
-~modulationLoopOn = 1;
+~modulationLoopOn = 0;
 ~modLoopLength = 16;
 
 
@@ -148,9 +237,9 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 
 // The played pattern
 Ndef(\a, Pbind(
-	\instrument, \fm,
+	\instrument, \modal,
 	// The trigger will be a combination of a Euclidean rhythm with a random sequence
-	\trig, Pseq(~euclid.value(~step, ~trig, ~rot), inf, 0).collect({|x|
+	\trig, Pseq(~pattern, inf, 0).collect({|x|
 	case(
 		{~op == 1}, {
 			if(~loop == 1, //Or
