@@ -74,13 +74,13 @@ s.reboot;
 
 // the SynthDef of the string
 (
-SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 40, vel = 1|
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 11, vel = 1|
 	var env, amp, freq, p, x;
 	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
 	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
 	//freq = NamedControl.ar(\freq , Array.fill(250,{0}));
-    amp = ~amp.value(midinote.midicps,5,11) * vel;
-    freq = ~freq.value(midinote.midicps,5,11);
+    amp = ~amp.value(midinote.midicps,5,modulation) * vel;
+    freq = ~freq.value(midinote.midicps,5,modulation);
 	env = EnvGen.kr(Env.perc(0.01, 0.2 + vel, 1, curve:-4), trig, doneAction: 2);
 	// All sine waves summed together
 	x = SinOsc.ar(freq, 0, amp).sum;
@@ -306,7 +306,7 @@ Ndef(\a, Pbind(
 			// note loop is one
 			~modLoopArray = ~modLoopArray.rotate(-1);
 			// We quintize the notes to a scale
-			~actualMod = ~modLoopArray[~modLoopLength - 2];
+			~actualMod = ~modLoopArray[~modLoopLength - 2].fold(2, 15);
 			if(~interpol == 0,
 				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
 				{
@@ -327,7 +327,7 @@ Ndef(\a, Pbind(
 			// Here We just update and rotate the note array with new notes
 			~modArray = ~modArray.rotate(-1);
 				~modArray[31] = if(~modStandardDev < 50, {~modExpVal.gauss(~modStandardDev).abs}, {if(0.5.coin, {clip(50.gauss(55 - ~standardDev), 0, 200)}, {clip(150.gauss(55 - ~standardDev), 150, 200)})});
-			~actualMod = ~modArray[30];
+			~actualMod = ~modArray[30].fold(2, 15);
 			if(~interpol == 0,
 				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
 				{
@@ -373,10 +373,10 @@ Ndef(\a, Pbind(
 ~trigPerm = 0;
 
 
-~standardDev = 6;
-~expVal = 60;
+~standardDev = 8;
+~expVal = 40;
 ~glide = 0;
-~noteLoopOn = 1;
+~noteLoopOn = 0;
 ~noteLoopLength = 8;
 ~notePerm = 10;
 ~selectScale = 5;
@@ -401,9 +401,9 @@ Ndef(\a, Pbind(
 ~velocityLoopLength = 16;
 
 
-~modStandardDev = 20;
-~modExpVal = 30;
-~interpol = 1;
+~modStandardDev = 4;
+~modExpVal = 4;
+~interpol = 0;
 ~modulationLoopOn = 0;
 ~modLoopLength = 16;
 
@@ -547,7 +547,7 @@ Pdefn(\variations, Pfuncn({
 			// note loop is one
 			~modLoopArray = ~modLoopArray.rotate(-1);
 			// We quintize the notes to a scale
-			~actualMod = ~modLoopArray[~modLoopLength - 2];
+			~actualMod = ~modLoopArray[~modLoopLength - 2].fold(2, 20);
 			if(~interpol == 0,
 				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
 				{
@@ -568,7 +568,7 @@ Pdefn(\variations, Pfuncn({
 			// Here We just update and rotate the note array with new notes
 			~modArray = ~modArray.rotate(-1);
 				~modArray[31] = if(~modStandardDev < 50, {~modExpVal.gauss(~modStandardDev).abs}, {if(0.5.coin, {clip(50.gauss(55 - ~standardDev), 0, 200)}, {clip(150.gauss(55 - ~standardDev), 150, 200)})});
-			~actualMod = ~modArray[30];
+			~actualMod = ~modArray[30].fold(2, 20);
 			if(~interpol == 0,
 				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
 				{
