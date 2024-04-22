@@ -74,8 +74,8 @@ s.reboot;
 
 // the SynthDef of the string
 (
-SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 11, vel = 1|
-	var env, amp, freq, p, x;
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 11, vel = 1, buf = 0, rate = 2, ptrdelay = 0.1|
+	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
 	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
 	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
 	//freq = NamedControl.ar(\freq , Array.fill(250,{0}));
@@ -84,25 +84,24 @@ SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 11, vel = 1|
 	env = EnvGen.kr(Env.perc(0.01, 0.2 + vel, 1, curve:-4), trig, doneAction: 2);
 	// All sine waves summed together
 	x = SinOsc.ar(freq, 0, amp).sum;
-	Out.ar(0,Pan2.ar(x * env,0));
+
+		ptr = Phasor.ar(0, BufRateScale.ir(buf), 0, BufFrames.ir(buf));
+	BufWr.ar(x * env, buf, ptr);
+	maxgraindur = ptrdelay / rate;
+	sig = GrainBuf.ar(
+		numChannels: 2,
+		trigger: Dust.kr(16),
+		dur: min(0.4, maxgraindur),
+		sndbuf: buf,
+		rate: rate,
+		pos: (ptr - (ptrdelay * SampleRate.ir)) / BufFrames.ir(buf)
+	);
+
+	Out.ar(0, XFade2.ar(x * env, sig, 0));
 }).add;
 )
 
-(
-// Defining FM synthesis module
-SynthDef(\fm, {
-	arg midinote = 70, freq_mod = 220, vel = 1, modulation = 40, trig = 1;
-	var out, mod, sig, env;
-	// Modulation signal
-	mod = SinOsc.ar(midinote + freq_mod, mul:modulation);
-	// Envelope
-	env = EnvGen.kr(Env.perc(0.01, 0.3 + (vel / 2), 1, curve:-7), trig, doneAction: 2);
-	// Output signal
-	sig = LFTri.ar(midinote.midicps + mod, mul:vel);
 
-	out = Out.ar(0, Pan2.ar(sig * env));
-}).add;
-)
 
 
 
@@ -163,7 +162,7 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 
 ~modArray = Array.rand(32, 0, 200);
 ~actualMod = ~modArray[30];
-
+b = Buffer.alloc(s, s.sampleRate * 3);
 
 
 
@@ -590,19 +589,6 @@ Pdefn(\variations, Pfuncn({
 )
 
 
-
-
-
-~baba = [1, 2, 3, 4, 5];
-~baba.permute(2);
-
-
-
-
-(
-~noteLoopArray.postln;
-~noteLoopArrayPerm.postln;
-)
 
 
 
