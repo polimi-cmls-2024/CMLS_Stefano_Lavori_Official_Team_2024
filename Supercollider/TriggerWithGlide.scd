@@ -74,7 +74,7 @@ s.reboot;
 
 // the SynthDef of the string
 (
-SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 11, vel = 1, buf = 0, rate = 2, ptrdelay = 0.1|
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.5|
 	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
 	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
 	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
@@ -85,22 +85,23 @@ SynthDef(\modal,{ |trig = 1, midinote = 70, modulation = 11, vel = 1, buf = 0, r
 	// All sine waves summed together
 	x = SinOsc.ar(freq, 0, amp).sum;
 
-		ptr = Phasor.ar(0, BufRateScale.ir(buf), 0, BufFrames.ir(buf));
-	BufWr.ar(x * env, buf, ptr);
+	ptr = Phasor.ar(0, BufRateScale.ir(0), 0, BufFrames.ir(0));
 	maxgraindur = ptrdelay / rate;
+	BufWr.ar(x * env, buf, ptr);
 	sig = GrainBuf.ar(
 		numChannels: 2,
 		trigger: Dust.kr(16),
-		dur: min(0.4, maxgraindur),
+		dur: min(0.5, maxgraindur),
 		sndbuf: buf,
 		rate: rate,
-		pos: (ptr - (ptrdelay * SampleRate.ir)) / BufFrames.ir(buf)
+		pos: (ptr - (ptrdelay  * SampleRate.ir))  / BufFrames.ir(buf),
+		envbufnum: -1,
+		interp: 4,
+		maxGrains: 64
 	);
-
-	Out.ar(0, XFade2.ar(x * env, sig, 0));
+	Out.ar(0, XFade2.ar(x * env, sig, -1));
 }).add;
 )
-
 
 
 
@@ -162,7 +163,7 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 
 ~modArray = Array.rand(32, 0, 200);
 ~actualMod = ~modArray[30];
-b = Buffer.alloc(s, s.sampleRate * 3);
+b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 
 
 
@@ -356,28 +357,28 @@ Ndef(\a, Pbind(
 
 (
 
-~step = 16;
+~step = 11;
 // Number of triggers inside of the Euclidean rhythm
-~trig = 11;
+~trig = 5;
 // Initial rotation
-~rot = 0;
+~rot = 5;
 ~pattern = ~euclid.value(~step, ~trig, ~rot);
 // Probability bias of the random coin flip
-~prob = 0.3;
+~prob = 0;
 // Operator between Or, And, Xor, Nand
 ~op = 1;
 // On/Off loop
-~loop = 1;
-~looplength = 16;
+~loop = 0;
+~looplength = 8;
 ~trigPerm = 0;
 
 
-~standardDev = 8;
-~expVal = 40;
-~glide = 0;
-~noteLoopOn = 0;
-~noteLoopLength = 8;
-~notePerm = 10;
+~standardDev = 5;
+~expVal = 55;
+~glide = 0.1;
+~noteLoopOn = 1;
+~noteLoopLength = 16;
+~notePerm = 0;
 ~selectScale = 5;
 
 
@@ -394,22 +395,22 @@ Ndef(\a, Pbind(
 	{~selectScale == 10}, {Scale.iwato},
 );
 
-~velStandardDev = 0.2;
-~velExpVal = 0.5;
+~velStandardDev = 0.3;
+~velExpVal = 0.4;
 ~velocityLoop = 1;
 ~velocityLoopLength = 16;
 
 
-~modStandardDev = 4;
-~modExpVal = 4;
+~modStandardDev = 0.1;
+~modExpVal = 2;
 ~interpol = 0;
 ~modulationLoopOn = 0;
-~modLoopLength = 16;
+~modLoopLength = 4;
+
 
 
 
 ~loopArray = ~randomSeq;
-~loopArray.postln;
 ~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm).postln;
 
 ~noteLoopArray = ~noteArray;
@@ -420,7 +421,7 @@ Ndef(\a, Pbind(
 ~modLoopArray = ~modArray.copyRange(0, ~modLoopLength - 1);
 
 
-Pdefn(\rhythm, Pseq(~pattern, inf, 0).collect({|x|
+~ritmo = {Pdefn(\rhythm, Pseq(~pattern, inf, 0).collect({|x|
 	case(
 		{~op == 1}, {
 			if(~loop == 1, //Or
@@ -480,8 +481,8 @@ Pdefn(\rhythm, Pseq(~pattern, inf, 0).collect({|x|
 		},
 
 );
-	}));
-Pdefn(\dynamics, Pfunc({if(~velocityLoop == 1,
+}))};
+~dinamica = {Pdefn(\dynamics, Pfunc({if(~velocityLoop == 1,
 		{
 			~velocityLoopArray = ~velocityLoopArray.rotate(-1);
 			~velocityLoopArray[~velocityLoopLength - 2];
@@ -490,10 +491,10 @@ Pdefn(\dynamics, Pfunc({if(~velocityLoop == 1,
 			~velocityArray = ~velocityArray.rotate(-1);
 			~velocityArray[31] =  if(~velStandardDev < 0.5, {clip(~velExpVal.gauss(~velStandardDev), 0.1, 1)}, {if(0.5.coin, {clip(0.3.gauss(0.55 - ~velStandardDev), 0.1, 1)}, {clip(0.9.gauss(0.55 - ~velStandardDev), 0.1, 1)})});
 			~velocityArray[30];
-	})}));
+})}))};
 
 	// The note when triggered (now is random)
-Pdefn(\melody, Pfuncn({
+~melodia = {Pdefn(\melody, Pfuncn({
 	if(~noteLoopOn == 1,
 		{
 			// note loop is one
@@ -538,9 +539,9 @@ Pdefn(\melody, Pfuncn({
 			)
 		}
 	)
-	}, inf));
+}, inf))};
 
-Pdefn(\variations, Pfuncn({
+~modulazione = {Pdefn(\variations, Pfuncn({
 	if(~modulationLoopOn == 1,
 		{
 			// note loop is one
@@ -585,13 +586,153 @@ Pdefn(\variations, Pfuncn({
 			)
 		}
 	)
-	}, inf))
+}, inf))};
 )
 
 
 
 
+(
+Window("Layout Management", Rect(100, 100, 500, 600)).front
+.layout_(
+	VLayout(
+		HLayout(
+			VLayout(
+				Button().states_([
+["OFF", Color.gray(0.2), Color.gray(0.8)],
+["ON", Color.gray(0.8), Color.green(0.7)]
+])
+.action_({ |btn| ~loop = btn.value;
+					~loopArray = ~randomSeq;
+					~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+					~ritmo.value;
+				}),
+				    a = StaticText().string = "Steps: " ++ ~step.asString,
+				Knob().action_({ |knb| ~step = (knb.value * 31) + 1;
+					~step = ~step.asInteger;
+					a.string = "Steps: " ++ ~step.asString;
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
 
+				}),
+				b = StaticText().string = "Triggers: " ++ ~trig.asString,
+				Knob().action_({ |knb| ~trig = (knb.value * ~step);
+					~trig = ~trig.ceil.asInteger;
+					b.string = "Triggers: " ++ ~trig.asString;
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
+				}),
+				g = StaticText().string = "Rotation: " ++ ~rot.asString,
+				Knob().action_({ |knb| ~rot = (knb.value * ~step);
+					~rot = ~rot.asInteger;
+					g.string = "Rotation: " ++ ~rot.asString;
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
+				}),
+				c = StaticText().string = "Probability: " ++ ~prob.asString,
+				Knob().action_({ |knb| ~prob = knb.value;
+					c.string = "Probability: " ++ ~prob.asString;
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
+				}),
+				d = StaticText().string = "Operators (or and xor nand): " ++ ~op.asString,
+				Knob().action_({ |knb| ~op = (knb.value * 3) + 1;
+					~op = ~op.ceil.asInteger;
+					d.string = "Operators (or and xor nand): " ++ ~op.asString;
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
+				}),
+				e = StaticText().string = "Loop Length: " ++ ~loopLength.asString,
+				Knob().action_({ |knb| ~loopLength = (knb.value * 31) + 1;
+					~loopLength = ~loopLength.asInteger;
+					e.string = "Triggers Loop Length: " ++ ~loopLength.asString;
+					~loopArray = ~randomSeq;
+					~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
+				}),
+				f = StaticText().string = "Permutations: " ++ ~trigPerm.asString,
+				Knob().action_({ |knb| ~trigPerm = (knb.value * (~loopLength.asInteger.clip(1, 12).factorial)).asInteger;
+					f.string = "Permutations: " ++ ~trigPerm.asString;
+					~loopArray = ~randomSeq;
+					~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~ritmo.value;
+			})),
+			VLayout(
+				Button().states_([
+				["OFF", Color.gray(0.2), Color.gray(0.8)],
+				["ON", Color.gray(0.8), Color.green(0.7)]
+			])
+			.action_({ |btn| ~noteLoopOn = btn.value;
+					~noteLoopArray = ~noteArray;
+					~noteLoopArray = ~noteArray.copyRange(0, ~noteLoopLength - 1).permute(~notePerm);
+					~melodia.value;
+				}),
+				h = StaticText().string = "Glide: " ++ ~glide.asString,
+				Knob().action_({ |knb| ~glide = (knb.value * 2) - 1;
+					h.string = "Glide: " ++ ~glide.asString;
+					~melodia.value;
+				}),
+				i = StaticText().string = "Notes Loop Length: " ++ ~noteLoopLength.asString,
+				Knob().action_({ |knb| ~noteLoopLength = (knb.value * 31).asInteger + 1;
+					~noteLoopArray = ~noteArray;
+					~noteLoopArray = ~noteArray.copyRange(0, ~noteLoopLength - 1).permute(~notePerm);
+					i.string = "Notes Loop Length: " ++ ~noteLoopLength.asString;
+					~melodia.value;
+				}),
+				j = StaticText().string = "Notes Permutations: " ++ ~notePerm.asString,
+				Knob().action_({ |knb| ~notePerm = (knb.value * (~noteLoopLength.asInteger.clip(1, 12).factorial)).asInteger;
+					~noteLoopArray = ~noteArray;
+					~noteLoopArray = ~noteArray.copyRange(0, ~noteLoopLength - 1).permute(~notePerm);
+					j.string = "Notes Permutations: " ++ ~notePerm.asString;
+					~melodia.value;
+				}),
+				k = StaticText().string = "Scale",
+				Knob().action_({ |knb| ~selectScale = (knb.value * 9).asInteger + 1;
+					~scale = case(
+						{~selectScale == 1}, {Scale.chromatic},
+						{~selectScale == 2}, {Scale.major},
+						{~selectScale == 3}, {Scale.minor},
+						{~selectScale == 4}, {Scale.majorPentatonic},
+						{~selectScale == 5}, {Scale.minorPentatonic},
+						{~selectScale == 6}, {Scale.dorian},
+						{~selectScale == 7}, {Scale.lydian},
+						{~selectScale == 8}, {Scale.phrygian},
+						{~selectScale == 9}, {Scale.mixolydian},
+						{~selectScale == 10}, {Scale.iwato},
+					);
+					~melodia.value;
+				}),
+				Button().states_([
+				["OFF", Color.gray(0.2), Color.gray(0.8)],
+				["ON", Color.gray(0.8), Color.green(0.7)]
+			])
+			.action_({ |btn| ~velocityLoop = btn.value;
+					~dinamica.value;
+				}),
+				l = StaticText().string = "Velocity Loop Length: " ++ ~velocityLoopLength.asString,
+				Knob().action_({ |knb| ~velocityLoopLength = (knb.value * 31).asInteger + 1;
+					l.string = "Velocity Loop Length: " ++ ~velocityLoopLength.asString;
+					~dinamica.value;
+				})),
+			VLayout(Button(), Knob(), Knob(), Knob(), Knob()),
+),
+		HLayout(
+			VLayout(
+			m = StaticText().string = "Foundamental and Spread ",
+			Slider2D().action_({ |sld| ~standardDev = (sld.y * 9) + 1;
+			~expVal = sld.x * 126 + 1;
+			~melodia.value;
+			})),
+			VLayout(
+			n = StaticText().string = "Bias and Spread",
+			Slider2D().action_({ |sld| ~velStandardDev = sld.y;
+			~velExpVal = sld.x;
+			~dinamica.value;
+			})),
+			),
+));
+ )
 
-
-s.scope;
+Scale.directory;
