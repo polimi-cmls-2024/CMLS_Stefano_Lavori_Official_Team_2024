@@ -21,7 +21,7 @@ s.reboot;
 ~op = 1;
 // On/Off loop
 ~loop = 0;
-~looplength = 1;
+~loopLength = 1;
 ~trigPerm = 0;
 
 
@@ -213,7 +213,7 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 
 ~loopArray = ~randomSeq;
-~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
 
 ~noteLoopArray = ~noteArray;
 ~noteLoopArray = ~noteArray.copyRange(0, ~noteLoopLength - 1).permute(~notePerm);
@@ -232,7 +232,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 					// Get next note from the loop array
 					~loopArray = ~loopArray.rotate(-1);
 					// Calculate trigger
-					~trigg = x.asBoolean.or(~loopArray[~looplength - 2].asBoolean).binaryValue;
+					~trigg = x.asBoolean.or(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;
 				},
 				{
 					// Get next note from the random array
@@ -248,7 +248,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, // And
 				{
 					~loopArray = ~loopArray.rotate(-1);
-					~trigg = x.asBoolean.and(~loopArray[~looplength - 2].asBoolean).binaryValue;},
+					~trigg = x.asBoolean.and(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
@@ -260,7 +260,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, //Xor
 				{
 					~loopArray = ~loopArray.rotate(-1);
-					~trigg = x.asBoolean.xor(~loopArray[~looplength - 2].asBoolean).binaryValue;},
+					~trigg = x.asBoolean.xor(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
@@ -272,7 +272,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, //Nand
 				{
 					~loopArray = ~loopArray.rotate(-1);
-					~trigg = x.asBoolean.nand(~loopArray[~looplength - 2].asBoolean).binaryValue;
+					~trigg = x.asBoolean.nand(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;
 				},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
@@ -436,7 +436,7 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 				])
 				.action_({ |btn| ~loop = btn.value;
 					~loopArray = ~randomSeq;
-					~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+					~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
 					~ritmo.value;
 				}),
 				    a = StaticText().string = "Euclid Steps: " ++ ~step.asString,
@@ -489,14 +489,14 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 					~loopLength = ~loopLength.asInteger;
 					e.string = "Trig Loop Length: " ++ ~loopLength.asString;
 					~loopArray = ~randomSeq;
-					~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+					~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
 					~pattern = ~euclid.value(~step, ~trig, ~rot);
 					~ritmo.value;
 				}),
 				f = StaticText().string = "Rhythm Permutations",
 				Knob().action_({ |knb| ~trigPerm = (knb.value * (~loopLength.asInteger.clip(1, 12).factorial)).asInteger;
 					~loopArray = ~randomSeq;
-					~loopArray = ~loopArray.copyRange(0, ~looplength - 1).permute(~trigPerm);
+					~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
 					~pattern = ~euclid.value(~step, ~trig, ~rot);
 					~ritmo.value;
 			})
@@ -599,5 +599,6 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 			),
 ));
  )
-
-~velocityLoopArray;
+~randomSeq;
+~loopArray;
+~loopLength;
