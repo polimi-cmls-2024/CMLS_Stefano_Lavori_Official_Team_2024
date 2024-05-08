@@ -166,7 +166,8 @@ bool DistFolderAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* DistFolderAudioProcessor::createEditor()
 {
-    return new DistFolderAudioProcessorEditor (*this);
+    //return new DistFolderAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this); //testing editor
 }
 
 //==============================================================================
@@ -181,6 +182,34 @@ void DistFolderAudioProcessor::setStateInformation (const void* data, int sizeIn
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+DistFolderAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Folder Amount", //ID
+        "Folder Amount", //Name
+        juce::NormalisableRange<float>(1.f, 60.f, 0.1f, 1.f), //min, max, increment, skew factor
+        1.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Distortion Amount", //ID
+        "Distortion Amount", //Name
+        juce::NormalisableRange<float>(1.f, 1000.f, 1.f, 1.f), //min, max, increment, skew factor
+        1.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Dry/Wet", //ID
+        "Dry/Wet", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.f)); //default value
+
+    return layout;
 }
 
 //==============================================================================

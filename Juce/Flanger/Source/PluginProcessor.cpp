@@ -166,7 +166,8 @@ bool FlangerAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* FlangerAudioProcessor::createEditor()
 {
-    return new FlangerAudioProcessorEditor (*this);
+    //return new FlangerAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this); //testing editor
 }
 
 //==============================================================================
@@ -181,6 +182,69 @@ void FlangerAudioProcessor::setStateInformation (const void* data, int sizeInByt
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+FlangerAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    juce::StringArray waveType(
+        "Sine",
+        "Square",
+        "Triangle",
+        "Sawtooth"
+    );
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        "Wave Type", //ID
+        "Wave Type", //Name
+        waveType,
+        0)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Rate", //ID
+        "Rate", //Name
+        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.25f), //min, max, increment, skew factor
+        0.5f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Depth", //ID
+        "Depth", //Name
+        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.7f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Feedback", //ID
+        "Feedback", //Name
+        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.5f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Width", //ID
+        "Width", //Name
+        juce::NormalisableRange<float>(0.000f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
+        0.01f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Dry/Wet", //ID
+        "Dry/Wet", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Color", //ID
+        "Color", //Name
+        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        1.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Stereo", //ID
+        "Stereo", //Name
+        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        1.f)); //default value
+
+    return layout;
 }
 
 //==============================================================================
