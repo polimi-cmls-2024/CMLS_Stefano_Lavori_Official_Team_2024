@@ -134,8 +134,8 @@ SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate 
 	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
 	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
 	//freq = NamedControl.ar(\freq , Array.fill(250,{0}));
-    amp = ~amp.value(midinote.midicps,5,modulation) * vel;
-    freq = ~freq.value(midinote.midicps,5,modulation);
+    amp = ~amp.value(midinote.midicps, modulation, 11) * vel;
+    freq = ~freq.value(midinote.midicps,5, 11);
 	env = EnvGen.kr(Env.perc(0.01, 0.2 + vel, 1, curve:-4), trig, doneAction: 2);
 	// All sine waves summed together
 	x = SinOsc.ar(freq, 0, amp).sum;
@@ -375,7 +375,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 		{
 			// Here We just update and rotate the note array with new notes
 			~modArray = ~modArray.rotate(-1);
-			~modArray[31] = if(~modStandardDev < 20, {~modExpVal.gauss(~modStandardDev).abs}, {if(0.5.coin, {clip((41 - ~modStandardDev).gauss(40.1 - ~modStandardDev), 1, 60)}, {clip((87 + ~modStandardDev).gauss(40.1 - ~modStandardDev), 60, 127)})});
+			~modArray[31] = if(~modStandardDev < 10, {~modExpVal.gauss(~modStandardDev).clip(2, 20)}, {if(0.5.coin, {clip((12 - ~modStandardDev/2).gauss(10.1 - ~modStandardDev/2), 2, 20)}, {clip((10 + ~modStandardDev/2).gauss(10.1 - ~modStandardDev/2), 2, 20)})});
 			~actualMod = ~modArray[30].fold(2, 20);
 			if(~interpol == 0,
 				//there were some glitches if we put 0 seconds to the glide time so we just skip the Line.kr if we have 0 glide
@@ -592,8 +592,8 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 			})),
 			VLayout(
 			o = StaticText().string = "Modulation Bias and Spread",
-			Slider2D().action_({ |sld| ~modStandardDev = (sld.y * 39.9) + 0.1;
-			~modExpVal = sld.x * 126 + 1;
+			Slider2D().action_({ |sld| ~modStandardDev = (sld.y * 19.9) + 0.1;
+			~modExpVal = sld.x * 18 + 2;
 			~modulazione.value;
 			})),
 			),
