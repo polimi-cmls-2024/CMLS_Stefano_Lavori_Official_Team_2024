@@ -160,10 +160,10 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
                 float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
 
-                if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
-                {
-                    continue;
-                }
+                //if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
+                //{
+                //    continue;
+                //}
 
                 *buffer.getWritePointer(channel, sample) *= fold_amount;
 
@@ -171,12 +171,14 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 {
                     if (*buffer.getWritePointer(channel, sample) > 1.0f)
                     {
-                        *buffer.getWritePointer(channel, sample) = 1.0f - *buffer.getWritePointer(channel, sample);
+                        // The reflection is with respect to the 1 level, not 0
+                        *buffer.getWritePointer(channel, sample) = 2.0f - *buffer.getWritePointer(channel, sample);
                     }
 
                     if (*buffer.getWritePointer(channel, sample) < -1.0f)
                     {
-                        *buffer.getWritePointer(channel, sample) = -1.0f - *buffer.getWritePointer(channel, sample);
+                        // The reflection is with respect to the -1 level, not 0
+                        *buffer.getWritePointer(channel, sample) = -2.0f - *buffer.getWritePointer(channel, sample);
                     }
                 }
 
