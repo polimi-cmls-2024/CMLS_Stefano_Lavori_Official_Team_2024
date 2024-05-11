@@ -150,13 +150,42 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (float sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        for (int channel = 0; channel < totalNumInputChannels; ++channel)
+            {
+                float dry_sample = *buffer.getWritePointer(channel, sample);
 
-        // ..do something to the data...
+                float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
+                float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
+                float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+
+                if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
+                {
+                    continue;
+                }
+
+                *buffer.getWritePointer(channel, sample) *= fold_amount;
+
+                while (abs(*buffer.getWritePointer(channel, sample)) > 1)
+                {
+                    if (*buffer.getWritePointer(channel, sample) > 1.0f)
+                    {
+                        *buffer.getWritePointer(channel, sample) = 1.0f - *buffer.getWritePointer(channel, sample);
+                    }
+
+                    if (*buffer.getWritePointer(channel, sample) < -1.0f)
+                    {
+                        *buffer.getWritePointer(channel, sample) = -1.0f - *buffer.getWritePointer(channel, sample);
+                    }
+                }
+
+                *buffer.getWritePointer(channel, sample) = *buffer.getWritePointer(channel, sample)*dry_wet + dry_sample*(1.0f -dry_wet);
+            }
     }
+    
 }
+
 
 //==============================================================================
 bool DistFolderAudioProcessor::hasEditor() const
