@@ -599,6 +599,58 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 			),
 ));
  )
-~randomSeq;
-~loopArray;
-~loopLength;
+
+
+
+//Parte di OSC... Ci stiamo lavorando
+(
+//Funzione che aggiorna in tempo reale i parametri che prende da una stringa
+(
+OSCdef(\fromProcessing, { |msg|
+	~step = msg[1];
+	~trig = msg[2];
+	~rot = msg[3];
+	~prob = msg[4];
+	~op = msg[5];
+	~loop = msg[6];
+	~loopLength = msg[7];
+	~trigPerm = msg[8];
+
+
+	~standardDev = msg[9];
+	~expVal = msg[10];
+	~glide = msg[11];
+	~noteLoopOn = msg[12];
+	~noteLoopLength = msg[13];
+	~notePerm = msg[14];
+	~selectScale = msg[15];
+
+	~velStandardDev = msg[16];
+	~velExpVal = msg[17];
+	~velocityLoop = msg[18];
+	~velocityLoopLength = msg[19];
+
+
+	~modStandardDev = msg[20];
+	~modExpVal = msg[21];
+	~interpol = msg[22];
+	~modulationLoopOn = msg[23];
+	~modLoopLength = msg[24];
+	msg[1].postln;
+}, '/vars');
+)
+
+//Mando nuovi parametri da sc a sc. L'OSCdef attiverà la funzione ogni volta che arriva un nuovo parmetro.
+~scport.sendMsg('/vars', 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+//Verifichiamo che il valore si sia aggiornato
+~step;
+
+
+
+
+
+//Non so se questa linea di codice servirà (ora sì perchè mando osc da sc).
+//Potrebbe essere una cosa da implementare in processing quando si mandano i dati.
+//Crea un net address (ora stiamo usando ip locale e la porta che sc sta ascoltando)
+~scport = NetAddr("127.0.0.1", NetAddr.langPort);
+)
