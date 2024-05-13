@@ -1,4 +1,8 @@
 import controlP5.*;
+import oscP5.*;
+import netP5.*;
+OscP5 oscP5;
+NetAddress myRemoteLocation;
 
 color[] colors = {color(185, 200, 255), color(255, 179, 186), color(186, 255, 201), color(255, 255, 186)};
 int[] colorsSwitch = {0xff0066cc, 0xffcc0000, 0xff00994c, 0xffffdf0b};
@@ -6,20 +10,32 @@ float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
 ArrayList<Knob> knobs = new ArrayList<Knob>();
 
-String[][] names = {{"Euclid steps", "Euclid triggers", "Euclid rotation", ""},
-                    {"Trig probability", "Logic operator", "Trig loop length", "Rhythm permutations"},
+String[][] names = {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
+                    {"Trig probability", "Velocity loop length" , "Trig loop length", "Rhythm permutations"},
                     {"Glide", "Notes loop length", "Notes permutation", "Scale"},
-                    {"Velocity loop length", "Modulation loop length", "Modulation interpolation", "Granulator Dry/Wet"}
+                    {"Modulation loop length", "Modulation interpolation", "Pitch granulator", "Granulator Dry/Wet"}
                   };
                   
-float[][] initVals = {{1,1,0,0},{0,1,1,0},{0,0,5,0},{1,1,0,0}};
-float[][] minVals = {{1,1,0,0},{0,1,1,0},{-1,1,0,1},{1,1,-1,0}};
-float[][] maxVals = {{32,32,32,0},{1,4,32,20},{1,32,20,10},{32,32,1,1}};
+float[][] initVals = {{1,1,0,1},
+                      {0,1,1,0},
+                      {0,1,5,1},
+                      {1,1,1,0}};
+float[][] minVals  = {{1,1,0,1},
+                      {0,1,1,0},
+                      {-1,1,0,1},
+                      {1,1,0.5,-1}};
+float[][] maxVals  = {{32,32,32,4},
+                      {1,32,32,20},
+                      {1,32,20,10},
+                      {32,10,2,1}};
 
 ControlP5 cp5;
 boolean toggleValue = false;
 
 void setup() {
+  oscP5 = new OscP5(this, 12000);
+  myRemoteLocation = new NetAddress("127.0.0.1", 57120);
+  
   smooth();
   cp5 = new ControlP5(this);
   noStroke();
@@ -36,12 +52,12 @@ void setup() {
       .setColorActive(colorsSwitch[i]);
     switch(i) {
     case 0:
-      for (int j = 0; j<3; j++) {
+      for (int j = 0; j<4; j++) {
         Knob knob = cp5.addKnob(names[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
-          .setPosition(width/16 + i*width/8 - 30, 100 + j*100)
-          .setRadius(30)
+          .setPosition(width/16 + i*width/8 - 25, 80 + j*80)
+          .setRadius(25)
           .setColorLabel(0)
           .setViewStyle(Knob.ELLIPSE)
           .setDragDirection(Knob.VERTICAL)
@@ -120,4 +136,14 @@ void setup() {
 }
 
 void draw() {
+  OscMessage myMessage = new OscMessage("/vars");
+  for(int i = 0; i < knobs.size(); i++){
+    Knob singleKnob = knobs.get(i);
+    
+    float value = singleKnob.getValue();
+    myMessage.add(value);
+    
+  }
+  oscP5.send(myMessage, myRemoteLocation);
+
 }
