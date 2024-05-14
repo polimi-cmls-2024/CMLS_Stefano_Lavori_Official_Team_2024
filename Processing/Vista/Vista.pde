@@ -10,24 +10,30 @@ float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
 ArrayList<Knob> knobs = new ArrayList<Knob>();
 
-String[][] names = {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
-                    {"Trig probability", "Velocity loop length" , "Trig loop length", "Rhythm permutations"},
-                    {"Glide", "Notes loop length", "Notes permutation", "Scale"},
-                    {"Modulation loop length", "Modulation interpolation", "Pitch granulator", "Granulator Dry/Wet"}
-                  };
-                  
-float[][] initVals = {{1,1,0,1},
-                      {0,1,1,0},
-                      {0,1,5,1},
-                      {1,1,1,0}};
-float[][] minVals  = {{1,1,0,1},
-                      {0,1,1,0},
-                      {-1,1,0,1},
-                      {1,1,0.5,-1}};
-float[][] maxVals  = {{32,32,32,4},
-                      {1,32,32,20},
-                      {1,32,20,10},
-                      {32,10,2,1}};
+String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
+  {"Trig probability", "Velocity loop length", "Trig loop length", "Rhythm permutations"},
+  {"Glide", "Notes loop length", "Notes permutation", "Scale"},
+  {"Modulation loop length", "Modulation interpolation", "Pitch granulator", "Granulator Dry/Wet"}
+};
+
+String[][] names_2 = {{"Fold Amount", "Dist Amount", "Dry/Wet"},
+   {"Wavelength", "Rate", "Depth"},
+  {"Feedback", "Width", "Dry/Wet boh"},
+  {"Color", "Stereo", ""}
+};
+
+float[][] initVals = {{1, 1, 0, 1},
+                      {0, 1, 1, 0},
+                      {0, 1, 5, 1},
+                      {1, 1, 1, 0}};
+float[][] minVals  = {{1, 1, 0, 1},
+                      {0, 1, 1, 0},
+                      {-1, 1, 0, 1},
+                     {1, 1, 0.5, -1}};
+float[][] maxVals  = {{32, 32, 32, 4},
+                     {1, 32, 32, 20},
+                     {1, 32, 20, 10},
+                     {32, 10, 2, 1}};
 
 ControlP5 cp5;
 boolean toggleValue = false;
@@ -35,7 +41,7 @@ boolean toggleValue = false;
 void setup() {
   oscP5 = new OscP5(this, 12000);
   myRemoteLocation = new NetAddress("127.0.0.1", 57120);
-  
+
   smooth();
   cp5 = new ControlP5(this);
   noStroke();
@@ -51,12 +57,12 @@ void setup() {
       .setColorLabel(0)
       .setColorBackground(0xffA0A0A0)
       .setColorActive(colorsSwitch[i]);
-      
+
     //creation of knobs in block_one
     switch(i) {
     case 0:
       for (int j = 0; j<4; j++) {
-        Knob knob = cp5.addKnob(names[i][j])
+        Knob knob = cp5.addKnob(names_1[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
           .setPosition(width/16 + i*width/8 - 25, 80 + j*80)
@@ -70,11 +76,28 @@ void setup() {
         knobs.add(
           knob
           );
+      }
+      for(int j = 0; j<3;j++){
+        Knob knob = cp5.addKnob(names_2[i][j])
+          .setRange(minVals[i][j], maxVals[i][j])
+          .setValue(initVals[i][j])
+          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setRadius(25)
+          .setColorLabel(0)
+          .setViewStyle(Knob.ELLIPSE)
+          .setDragDirection(Knob.VERTICAL)
+          .setColorBackground(0xffd84225)
+          .setColorForeground(0xffffffff)
+          .setColorActive(0xffffffff);
+        knobs.add(
+          knob
+          );
+      
       }
       break;
     case 1:
       for (int j = 0; j<4; j++) {
-        Knob knob = cp5.addKnob(names[i][j])
+        Knob knob = cp5.addKnob(names_1[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
           .setPosition(width/16 + i*width/8 - 25, 80 + j*80)
@@ -89,10 +112,26 @@ void setup() {
           knob
           );
       }
+      for(int j = 0; j<3;j++){
+        Knob knob = cp5.addKnob(names_2[i][j])
+          .setRange(minVals[i][j], maxVals[i][j])
+          .setValue(initVals[i][j])
+          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setRadius(25)
+          .setColorLabel(0)
+          .setViewStyle(Knob.ELLIPSE)
+          .setDragDirection(Knob.VERTICAL)
+          .setColorBackground(0xffe99728)
+          .setColorForeground(0xffffffff)
+          .setColorActive(0xffffffff);
+        knobs.add(
+          knob
+          );     
+      }
       break;
-      case 2:
+    case 2:
       for (int j = 0; j<4; j++) {
-        Knob knob = cp5.addKnob(names[i][j])
+        Knob knob = cp5.addKnob(names_1[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
           .setPosition(width/16 + i*width/8 - 25, 80 + j*80)
@@ -107,10 +146,27 @@ void setup() {
           knob
           );
       }
+      for(int j = 0; j<3;j++){
+        Knob knob = cp5.addKnob(names_2[i][j])
+          .setRange(minVals[i][j], maxVals[i][j])
+          .setValue(initVals[i][j])
+          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setRadius(25)
+          .setColorLabel(0)
+          .setViewStyle(Knob.ELLIPSE)
+          .setDragDirection(Knob.VERTICAL)
+          .setColorBackground(0xff4bb848)
+          .setColorForeground(0xffffffff)
+          .setColorActive(0xffffffff);
+        knobs.add(
+          knob
+          );
+      
+      }
       break;
-      case 3:
+    case 3:
       for (int j = 0; j<4; j++) {
-        Knob knob = cp5.addKnob(names[i][j])
+        Knob knob = cp5.addKnob(names_1[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
           .setPosition(width/16 + i*width/8 - 25, 80 + j*80)
@@ -126,36 +182,60 @@ void setup() {
           knob
           );
       }
+      for(int j = 0; j<2;j++){
+        Knob knob = cp5.addKnob(names_2[i][j])
+          .setRange(minVals[i][j], maxVals[i][j])
+          .setValue(initVals[i][j])
+          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setRadius(25)
+          .setColorLabel(0)
+          .setViewStyle(Knob.ELLIPSE)
+          .setDragDirection(Knob.VERTICAL)
+          .setColorBackground(colorsSwitch[i])
+          .setColorForeground(0xffffffff)
+          .setColorActive(0xffffffff);
+        knobs.add(
+          knob
+          );
+      
+      }
       break;
     }
     rectMode(CORNER);
     fill(colors[i]);
     rect(i * width/8, 0, width/8, height*5/8);
   };
-  for (int i = 0; i <3; i++){
-    cp5.addSlider2D("Name"+i)
-    .setPosition(width/20+i*width/6, height*11/16)
-    .setMinMax(0,0,100,100)
-    .setSize(100,150)
-    .setColorBackground(0xff7d3c98)
-    ;
+  for (int i = 0; i <3; i++) {
+      cp5.addSlider2D("Name"+i)
+      .setPosition(width/20+i*width/6, height*11/16)
+      .setMinMax(0, 0, 100, 100)
+      .setSize(100, 150)
+      .setColorBackground(0xff7d3c98)
+      ;
   };
-  fill(241,203,255);
+  //creation of knobs in block_two
+  
+  
+  fill(241, 203, 255);
   rect(0, height*5/8, width/2, height);
   fill(255, 40, 52);
   rect(width/2, 0, width/8, height);
+  fill(40);
+  rect(width*5/8, 0, width, height);
+  fill(255);
+  textSize(20);
+  textAlign(CENTER);
+  text("Folder&Distortion", width*13/16, height/16);
   smooth();
 }
 
 void draw() {
   OscMessage myMessage = new OscMessage("/vars");
-  for(int i = 0; i < knobs.size(); i++){
+  for (int i = 0; i < knobs.size(); i++) {
     Knob singleKnob = knobs.get(i);
-    
+
     float value = singleKnob.getValue();
     myMessage.add(value);
-    
   }
   oscP5.send(myMessage, myRemoteLocation);
-
 }
