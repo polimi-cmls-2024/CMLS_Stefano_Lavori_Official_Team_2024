@@ -232,6 +232,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 					// Get next note from the loop array
 					~loopArray = ~loopArray.rotate(-1);
 					// Calculate trigger
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.or(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;
 				},
 				{
@@ -240,6 +241,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 					// add new element to the last position of array (length of array is 16, from 0 to 15)
 					~randomSeq.put(15, ~prob.coin.binaryValue);
 					// get the current note to play, which is the one that was previously at position 15, but because of the rotation, now is in position 14
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.or(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -248,10 +250,12 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, // And
 				{
 					~loopArray = ~loopArray.rotate(-1);
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.and(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.and(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -260,10 +264,12 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, //Xor
 				{
 					~loopArray = ~loopArray.rotate(-1);
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.xor(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.xor(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -272,11 +278,13 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, //Nand
 				{
 					~loopArray = ~loopArray.rotate(-1);
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.nand(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;
 				},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
+					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.nand(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -603,7 +611,7 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 
 
 //Parte di OSC... Ci stiamo lavorando
-(
+
 //Funzione che aggiorna in tempo reale i parametri che prende da una stringa
 (
 OSCdef(\fromProcessing, { |msg|
@@ -646,11 +654,19 @@ OSCdef(\fromProcessing, { |msg|
 ~step;
 
 
-
-
-
 //Non so se questa linea di codice servirà (ora sì perchè mando osc da sc).
 //Potrebbe essere una cosa da implementare in processing quando si mandano i dati.
 //Crea un net address (ora stiamo usando ip locale e la porta che sc sta ascoltando)
 ~scport = NetAddr("127.0.0.1", NetAddr.langPort);
+
+
+
+
+//Isco il ricevitore dei trigger in processing deve avere questa forma. In particolare l'ID deve essere trig.
+(
+
+OSCdef(\prova, {|msc|
+	msc[1].postln;
+}, '/trig');
+
 )
