@@ -6,9 +6,9 @@ s.boot;
 Server.killAll;
 s.reboot;
 
-
 //Runna questo dopo il server
 (
+~cnt = 0;
 ~step = 1;
 // Number of triggers inside of the Euclidean rhythm
 ~trig = 1;
@@ -224,6 +224,8 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 
 
 ~ritmo = {Pdefn(\rhythm, Pseq(~pattern, inf, 0).collect({|x|
+	~cnt = ((~cnt + 1) % ~step);
+	~scport.sendMsg('/cnt', ~cnt);
 	case(
 		{~op == 1}, {
 			if(~loop == 1, //Or
@@ -451,7 +453,7 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 				Knob().action_({ |knb| ~step = (knb.value * 31) + 1;
 					~step = ~step.asInteger;
 					a.string = "Euclid Steps: " ++ ~step.asString;
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~pattern = ~euclid.value(~step, ~trig, ~rot) + ~cnt;
 					~ritmo.value;
 
 				}),
@@ -459,14 +461,14 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 				Knob().action_({ |knb| ~trig = (knb.value * (~step- 1)) + 1;
 					~trig = ~trig.asInteger;
 					b.string = "Euclid Triggers: " ++ ~trig.asString;
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
 					~ritmo.value;
 				}),
 				g = StaticText().string = "Euclid Rotation: " ++ ~rot.asString,
 				Knob().action_({ |knb| ~rot = (knb.value * ~step);
 					~rot = ~rot.asInteger;
 					g.string = "Euclid Rotation: " ++ ~rot.asString;
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
+					~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
 					~ritmo.value;
 				}),
 				),
@@ -482,14 +484,12 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 				}),
 				c = StaticText().string = "Trig Probability",
 				Knob().action_({ |knb| ~prob = knb.value;
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
 					~ritmo.value;
 				}),
 				d = StaticText().string = "Logic (or and xor nand): " ++ ~op.asString,
 				Knob().action_({ |knb| ~op = (knb.value * 3) + 1;
 					~op = ~op.ceil.asInteger;
 					d.string = "Logic (or and xor nand): " ++ ~op.asString;
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
 					~ritmo.value;
 				}),
 				e = StaticText().string = "Trig Loop Length: " ++ ~loopLength.asString,
@@ -498,14 +498,12 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 					e.string = "Trig Loop Length: " ++ ~loopLength.asString;
 					~loopArray = ~randomSeq;
 					~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
 					~ritmo.value;
 				}),
 				f = StaticText().string = "Rhythm Permutations",
 				Knob().action_({ |knb| ~trigPerm = (knb.value * (~loopLength.asInteger.clip(1, 12).factorial)).asInteger;
 					~loopArray = ~randomSeq;
 					~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
-					~pattern = ~euclid.value(~step, ~trig, ~rot);
 					~ritmo.value;
 			})
 			),
@@ -670,3 +668,6 @@ OSCdef(\prova, {|msc|
 }, '/trig');
 
 )
+~rot;
+~rot = ~rot + i;
+
