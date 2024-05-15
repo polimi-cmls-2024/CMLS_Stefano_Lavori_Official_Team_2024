@@ -95,6 +95,11 @@ void DistFolderAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+
+    waveshaper.functionToUse = [](float x) //init waveshaper function
+        {
+            return std::tanh(x);
+        };
 }
 
 void DistFolderAudioProcessor::releaseResources()
@@ -153,41 +158,45 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (float sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        {
+            float dry_sample = *buffer.getWritePointer(channel, sample);
+
+            float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
+            float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
+            float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+
+            //if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
+            //{
+            //    continue;
+            //}
+
+            *buffer.getWritePointer(channel, sample) *= fold_amount;
+
+            while (abs(*buffer.getWritePointer(channel, sample)) > 1)
             {
-                float dry_sample = *buffer.getWritePointer(channel, sample);
-
-                float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
-                float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
-                float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
-
-                //if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
-                //{
-                //    continue;
-                //}
-
-                *buffer.getWritePointer(channel, sample) *= fold_amount;
-
-                while (abs(*buffer.getWritePointer(channel, sample)) > 1)
+                if (*buffer.getWritePointer(channel, sample) > 1.0f)
                 {
-                    if (*buffer.getWritePointer(channel, sample) > 1.0f)
-                    {
-                        // The reflection is with respect to the 1 level, not 0
-                        *buffer.getWritePointer(channel, sample) = 2.0f - *buffer.getWritePointer(channel, sample);
-                    }
-
-                    if (*buffer.getWritePointer(channel, sample) < -1.0f)
-                    {
-                        // The reflection is with respect to the -1 level, not 0
-                        *buffer.getWritePointer(channel, sample) = -2.0f - *buffer.getWritePointer(channel, sample);
-                    }
+                    // The reflection is with respect to the 1 level, not 0
+                    *buffer.getWritePointer(channel, sample) = 2.0f - *buffer.getWritePointer(channel, sample);
                 }
 
-                *buffer.getWritePointer(channel, sample) = *buffer.getWritePointer(channel, sample)*dry_wet + dry_sample*(1.0f -dry_wet);
+                if (*buffer.getWritePointer(channel, sample) < -1.0f)
+                {
+                    // The reflection is with respect to the -1 level, not 0
+                    *buffer.getWritePointer(channel, sample) = -2.0f - *buffer.getWritePointer(channel, sample);
+                }
             }
-    }
-    
-}
 
+            //*buffer.getWritePointer(channel, sample) = std::tanh(*buffer.getWritePointer(channel, sample))*dist_amount;
+
+            *buffer.getWritePointer(channel, sample) = waveshaper.processSample(*buffer.getWritePointer(channel, sample) * dist_amount); //distortion implementation
+                     
+            //*buffer.getWritePointer(channel, sample) = *buffer.getWritePointer(channel, sample) * dry_wet + dry_sample * (1.0f - dry_wet);
+   
+            *buffer.getWritePointer(channel, sample) = juce::jlimit(-0.1f, 0.1f, *buffer.getWritePointer(channel, sample));
+        }
+    }
+}
 
 //==============================================================================
 bool DistFolderAudioProcessor::hasEditor() const
@@ -215,8 +224,6 @@ void DistFolderAudioProcessor::setStateInformation (const void* data, int sizeIn
     // whose contents will have been created by the getStateInformation() call.
 }
 
-
-
 juce::AudioProcessorValueTreeState::ParameterLayout
 DistFolderAudioProcessor::createParameterLayout()
 {
@@ -231,7 +238,7 @@ DistFolderAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Distortion Amount", //ID
         "Distortion Amount", //Name
-        juce::NormalisableRange<float>(1.f, 1000.f, 1.f, 1.f), //min, max, increment, skew factor
+        juce::NormalisableRange<float>(1.f, 1000.f, 1.f, 1.0f), //min, max, increment, skew factor
         1.f)); //default value
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
