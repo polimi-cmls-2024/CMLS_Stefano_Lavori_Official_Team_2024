@@ -225,8 +225,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 
 ~ritmo = {Pdefn(\rhythm, Pseq(~pattern, inf, 0).collect({|x|
 	~cnt = ((~cnt + 1) % ~step);
-	~scport.sendMsg('/cnt', ~cnt);
-	case(
+		case(
 		{~op == 1}, {
 			if(~loop == 1, //Or
 				{
@@ -234,7 +233,6 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 					// Get next note from the loop array
 					~loopArray = ~loopArray.rotate(-1);
 					// Calculate trigger
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.or(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;
 				},
 				{
@@ -243,7 +241,6 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 					// add new element to the last position of array (length of array is 16, from 0 to 15)
 					~randomSeq.put(15, ~prob.coin.binaryValue);
 					// get the current note to play, which is the one that was previously at position 15, but because of the rotation, now is in position 14
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.or(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -252,12 +249,10 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, // And
 				{
 					~loopArray = ~loopArray.rotate(-1);
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.and(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.and(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -266,12 +261,10 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, //Xor
 				{
 					~loopArray = ~loopArray.rotate(-1);
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.xor(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.xor(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
@@ -280,20 +273,20 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 			if(~loop == 1, //Nand
 				{
 					~loopArray = ~loopArray.rotate(-1);
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.nand(~loopArray[(~loopLength - 2).clip(0, 31)].asBoolean).binaryValue;
 				},
 				{
 					~randomSeq = ~randomSeq.rotate(-1);
 					~randomSeq.put(15, ~prob.coin.binaryValue);
-					~scport.sendMsg('/trig', ~trigg);
 					~trigg = x.asBoolean.nand(~randomSeq[14].asBoolean).binaryValue;
 				}
 			)
 		},
 
 );
-}))};
+};
+~scport.sendMsg('/trig', ~trigg, ~cnt);
+))};
 ~dinamica = {Pdefn(\dynamics, Pfunc({if(~velocityLoop == 1,
 		{
 			~velocityLoopArray = ~velocityLoopArray.rotate(-1);
