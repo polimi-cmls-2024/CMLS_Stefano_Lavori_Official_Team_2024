@@ -6,6 +6,7 @@ NetAddress myRemoteLocation;
 
 color[] colors = {color(185, 200, 255), color(255, 179, 186), color(186, 255, 201), color(255, 255, 186)};
 int[] colorsSwitch = {0xff0066cc, 0xffcc0000, 0xff00994c, 0xffffdf0b};
+int[] in_rainbows = {0xffa2dce6, 0xffec2327, 0xffedb31e, 0xff45b74a, 0xfff36525, 0xff4686c7, 0xfff7ed4a};
 float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
 ArrayList<Knob> knobs = new ArrayList<Knob>();
@@ -18,7 +19,7 @@ String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Log
 
 String[][] names_2 = {{"Fold Amount", "Dist Amount", "Dry/Wet"},
    {"Wavelength", "Rate", "Depth"},
-  {"Feedback", "Width", "Dry/Wet boh"},
+  {"Feedback", "Width", "Dry/Wet Flanger"},
   {"Color", "Stereo", ""}
 };
 
@@ -34,6 +35,7 @@ float[][] maxVals  = {{32, 32, 32, 4},
                      {1, 32, 32, 20},
                      {1, 32, 20, 10},
                      {32, 10, 2, 1}};
+                    
 
 ControlP5 cp5;
 boolean toggleValue = false;
@@ -58,7 +60,7 @@ void setup() {
       .setColorBackground(0xffA0A0A0)
       .setColorActive(colorsSwitch[i]);
 
-    //creation of knobs in block_one
+    //creation of knobs in block_one and block_two
     switch(i) {
     case 0:
       for (int j = 0; j<4; j++) {
@@ -81,12 +83,12 @@ void setup() {
         Knob knob = cp5.addKnob(names_2[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
-          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setPosition(width*11/16 + j*width/8 - 25, height/8)
           .setRadius(25)
-          .setColorLabel(0)
+          .setColorLabel(250)
           .setViewStyle(Knob.ELLIPSE)
           .setDragDirection(Knob.VERTICAL)
-          .setColorBackground(0xffd84225)
+          .setColorBackground(in_rainbows[1])
           .setColorForeground(0xffffffff)
           .setColorActive(0xffffffff);
         knobs.add(
@@ -116,12 +118,12 @@ void setup() {
         Knob knob = cp5.addKnob(names_2[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
-          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setPosition(width*11/16 + j*width/8 - 25, height*3/8)
           .setRadius(25)
-          .setColorLabel(0)
+          .setColorLabel(250)
           .setViewStyle(Knob.ELLIPSE)
           .setDragDirection(Knob.VERTICAL)
-          .setColorBackground(0xffe99728)
+          .setColorBackground(in_rainbows[2])
           .setColorForeground(0xffffffff)
           .setColorActive(0xffffffff);
         knobs.add(
@@ -150,12 +152,12 @@ void setup() {
         Knob knob = cp5.addKnob(names_2[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
-          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setPosition(width*11/16 + j*width/8 - 25, height*9/16)
           .setRadius(25)
-          .setColorLabel(0)
+          .setColorLabel(250)
           .setViewStyle(Knob.ELLIPSE)
           .setDragDirection(Knob.VERTICAL)
-          .setColorBackground(0xff4bb848)
+          .setColorBackground(in_rainbows[3])
           .setColorForeground(0xffffffff)
           .setColorActive(0xffffffff);
         knobs.add(
@@ -186,12 +188,12 @@ void setup() {
         Knob knob = cp5.addKnob(names_2[i][j])
           .setRange(minVals[i][j], maxVals[i][j])
           .setValue(initVals[i][j])
-          .setPosition(width*11/16 + j*width/8 - 25, 80 + i*80)
+          .setPosition(width*12/16 + j*width/8 - 25, height*6/8)
           .setRadius(25)
-          .setColorLabel(0)
+          .setColorLabel(250)
           .setViewStyle(Knob.ELLIPSE)
           .setDragDirection(Knob.VERTICAL)
-          .setColorBackground(colorsSwitch[i])
+          .setColorBackground(in_rainbows[4])
           .setColorForeground(0xffffffff)
           .setColorActive(0xffffffff);
         knobs.add(
@@ -213,7 +215,6 @@ void setup() {
       .setColorBackground(0xff7d3c98)
       ;
   };
-  //creation of knobs in block_two
   
   
   fill(241, 203, 255);
@@ -222,10 +223,11 @@ void setup() {
   rect(width/2, 0, width/8, height);
   fill(40);
   rect(width*5/8, 0, width, height);
-  fill(255);
+  fill(70,134,199);
   textSize(20);
   textAlign(CENTER);
   text("Folder&Distortion", width*13/16, height/16);
+  text("Flanger", width*13/16,height*5/16);
   smooth();
 }
 
