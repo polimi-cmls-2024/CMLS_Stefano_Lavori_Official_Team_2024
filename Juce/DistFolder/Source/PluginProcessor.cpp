@@ -22,6 +22,10 @@ DistFolderAudioProcessor::DistFolderAudioProcessor()
                        )
 #endif
 {
+    waveshaper.functionToUse = [](float x) //init waveshaper function
+        {
+            return std::tanh(x);
+        };
 }
 
 DistFolderAudioProcessor::~DistFolderAudioProcessor()
@@ -96,10 +100,7 @@ void DistFolderAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
-    waveshaper.functionToUse = [](float x) //init waveshaper function
-        {
-            return std::tanh(x);
-        };
+    
 }
 
 void DistFolderAudioProcessor::releaseResources()

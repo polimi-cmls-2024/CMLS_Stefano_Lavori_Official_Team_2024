@@ -74,30 +74,13 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="14" x="0.4876302083333333" y="0.6342525399129173" useARA="0"
-          uiLastX_Normal="772" uiLastY_Normal="130" uiopen_Normal="0">
-    <PLUGIN name="MAnalyzer" format="VST3" category="Fx|Tools" manufacturer="MeldaProduction"
-            version="14.03" file="C:\Program Files\Common Files\VST3\MeldaProduction\Tools\MAnalyzer.vst3"
-            uniqueId="1d0ac80b" isInstrument="0" fileTime="17005cac338" infoUpdateTime="18f722d8afb"
-            numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
-            uid="f9389086"/>
-    <STATE>1111.VMjLg3DA...O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9LiMv3xLuMVXRYDLSIzPCUTQ4LVNUomX3T0Zv3TMFEVRykmYD0TNtPTRlEEYzYGcNokbwHkVKIDd0QVdFEDZRcCLjkiSsQlMzX0c3bTN5AUNBgSPykmRAYUYJAET1n0UyESLHc1X2IScw4Bc0AWaXUCRwg2M3DkdGYGVTEVXBoVXp4xPHkVNBgCbFIlPZEFZgolKy8zQHk1Xw3lLYwjaOciaUMGdlAiTlIjZGEGLQ0VYmkCRJc1YEoWX4g2atjEd2TTXMUCVDYCQXIERswFL0YVdybiXjEiYwAyTqAkVIU2SKEGRKEFTFUFRPwFbNwDMucEY1MiUqb2apcjZBo1aXQDNmcmSoE0bMYFLKglaGM1XoYCS4QmQygSUskmbRQSctnWRyY2b4UmQ1vldx3zUGslbno2Yu4RVuEiU1DyJ0HSXQkzMxgmVmozcuYCRyIkbTc0QxvzbRIFdOkEaGU1Uggla0EmKuAkTqgDMLIEdYMENDshQwIES481bQg2TFU0TyDTR1MCSlIlaikESlgmaus1ZqkEMzLWP3rBV2D2cRkyTyfCQowVTIckUDM2Zt.WNHIVMMU2cyUlb4MyM08FS1XGc4IkVMMSTU41bZASYv8DZ4MlM04lZhgyJlAUU0UlcFACUgAEOujzPu0Fbu4VYtQmO7jTQjkFcC8lazI2arwVYx4yL1.iKy71XgIkQvLkPCMTQEkyX4TkdhgSUqAiS0XTXIMWdlQTS43BQIYVTjQmcz4jVxEiTZsjP3UGY4YTPnI0MvPVNN0FY1PiU2gyQ4nGT4HDNAMWdJEjUkoDTPYiVWMWLwfzYicmL0EmKzUGbsgUMHEGd2fST5cjcXQUXgIjZgolKCgTZ4HDNvYjXBoUXnElZtL2SGgTZiEiaxjESt8zMtU0b3YFLRYlPpcTbvDUakcVNHozYmUjdgkGdu4RV3cSQg0TMXQjMDgkTH0FavTmY4MyMhQVLlEGLSsFTZkTcOsTbHsTXPYTYHAEav4DSz71UjY2LVsxcuo1QpIjZugEQ3b1cNkVTy0jYvrDZtczXiklMLkGcFMGNU0VdxIEM04hdIMmcykWcFYCa5IiSWczZxgldm8lKY8VLVYSLqTiLgEUR2HGdZclR28lMHMmTxQ0UGICSyIkX38TVrcTYWEFZtUWbt7FTRsFRzvjT3k0T3PzJFEmTLk2ayEEdSYTUSMSPIY2LLYlXtMVVLYFdt81ZqsVVzPybAgyJXcSb2IUNSMCNDkFaQkzUVQzbq4Bb4fjX0zTc2MWYxk2L2T2aLYiczkmTZ0zLQUkayoELkA2Snk2X1TmapIFNqXFTUUWY1YDLTEFT77RREQVZzMzatQmbuwFakImO77hUSQ0LPwVcmklaSQWXzUlO..</STATE>
-    <LAYOUT>
-      <INPUTS>
-        <BUS index="0" layout="L R"/>
-      </INPUTS>
-      <OUTPUTS>
-        <BUS index="0" layout="L R"/>
-      </OUTPUTS>
-    </LAYOUT>
-  </FILTER>
-  <FILTER uid="15" x="0.43" y="0.4395161290322581" useARA="0" uiLastX_Normal="482"
-          uiLastY_Normal="249" uiopen_Normal="0">
-    <PLUGIN name="DistFolder" format="VST3" category="Fx" manufacturer="StefaniLavori"
+  <FILTER uid="15" x="0.49375" y="0.5725806451612904" useARA="0" uiLastX_Normal="68"
+          uiLastY_Normal="16" uiopen_Normal="0">
+    <PLUGIN name="DistFolder" format="VST3" category="Fx" manufacturer="StefanoLavori"
             version="1.0.0" file="C:\Users\Utente\Desktop\Karl\Uni\Poli\CMLS\ProjectCMLS\Juce\DistFolder\Builds\VisualStudio2022\x64\Debug\VST3\DistFolder.vst3\Contents\x86_64-win\DistFolder.vst3"
-            uniqueId="6add719" isInstrument="0" fileTime="18f72189a24" infoUpdateTime="18f722d8afc"
+            uniqueId="f2a6d323" isInstrument="0" fileTime="18f7bcc43cd" infoUpdateTime="18f7be111c3"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
-            uid="e95cc0e4"/>
+            uid="e9538ebf"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
     <LAYOUT>
       <INPUTS>
@@ -111,8 +94,6 @@
   <CONNECTION srcFilter="7" srcChannel="4096" dstFilter="13" dstChannel="4096"/>
   <CONNECTION srcFilter="13" srcChannel="0" dstFilter="15" dstChannel="0"/>
   <CONNECTION srcFilter="13" srcChannel="1" dstFilter="15" dstChannel="1"/>
-  <CONNECTION srcFilter="14" srcChannel="0" dstFilter="8" dstChannel="0"/>
-  <CONNECTION srcFilter="14" srcChannel="1" dstFilter="8" dstChannel="1"/>
-  <CONNECTION srcFilter="15" srcChannel="0" dstFilter="14" dstChannel="0"/>
-  <CONNECTION srcFilter="15" srcChannel="1" dstFilter="14" dstChannel="1"/>
+  <CONNECTION srcFilter="15" srcChannel="0" dstFilter="8" dstChannel="0"/>
+  <CONNECTION srcFilter="15" srcChannel="1" dstFilter="8" dstChannel="1"/>
 </FILTERGRAPH>
