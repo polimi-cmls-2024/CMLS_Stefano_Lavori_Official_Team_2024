@@ -23,27 +23,27 @@ String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Log
   {"Modulation loop length", "Modulation interpolation", "Pitch granulator", "Granulator Dry/Wet"}
 };
 
-String[][] names_2 = {{"Fold Amount", "Dist Amount", "Dry/Wet"},
+String[][] names_2 = {{"Fold Amount", "Dist Amount", "F&D Dry/Wet"},
   {"Wavelength", "Rate", "Depth"},
-  {"Feedback", "Width", "Dry/Wet Flanger"},
+  {"Feedback", "Width", "Flanger Dry/Wet"},
   {"Color", "Stereo", ""}
 };
 
 ArrayList<Slider2D> sliders = new ArrayList<Slider2D>();
 
 
-float[][] initVals_1 = {{1, 1, 0, 1},
+float[][] initVals_1 = {{1, 1, 1, 1},
   {0, 1, 1, 0},
   {0, 1, 5, 1},
-  {1, 1, 1, 0}};
-float[][] minVals_1  = {{1, 1, 0, 1},
+  {1, 0, 1, 0}};
+float[][] minVals_1  = {{1, 1, 1, 1},
   {0, 1, 1, 0},
   {-1, 1, 0, 1},
-  {1, 1, 0.5, -1}};
+  {1, 0, 0.5, 0}};
 float[][] maxVals_1= {{32, 32, 32, 4},
   {1, 32, 32, 20},
   {1, 32, 20, 10},
-  {32, 10, 2, 1}};
+  {32, 1, 2, 1}};
 
 
 int slider_select = 0;
@@ -91,10 +91,15 @@ void setup() {
     switch(i) {
     case 0:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,1,false);
+        ticks = 31;
+        if(j == 3){
+          ticks = 3;
+        }
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,ticks,true);
         knobs_supercollider.add(
           knob
           );
+
       }
       for (int j = 0; j<3; j++) {
         if(j == 1){
@@ -102,7 +107,6 @@ void setup() {
           snap = true;
         }
         Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white,ticks, snap);
-        knob.hideTickMarks();
         knobs_juice.add(
           knob
           );
@@ -112,10 +116,18 @@ void setup() {
       break;
     case 1:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,1,false);
+        if(j==1 || j== 2){
+        ticks = 31;
+        snap = true;
+        }
+        if(j == 3){
+        ticks = 20;
+        snap = true;
+        }
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks,snap);
         knobs_supercollider.add(
           knob
-          );
+          );     
       }
       for (int j = 0; j<3; j++) {
           Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25,height*3/8,white, in_rainbows[i+1], white,1,false);
@@ -126,8 +138,26 @@ void setup() {
       break;
     case 2:
       for (int j = 0; j<4; j++) {
+        switch(j){
+        case 0:
+          ticks = 1;
+          snap = false;
+        break;
+        case 1:
+            ticks = 31;
+           snap = true;
+        break;
+        case 2:
+           ticks = 20;
+           snap = true;
+        break;
+        case 3:
+            ticks = 9;
+            snap = true;
+        break;
+        }
 
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,1,false);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,ticks,snap);
         knobs_supercollider.add(
           knob
           );
@@ -141,7 +171,13 @@ void setup() {
       break;
     case 3:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black,1,false);
+        ticks=1;
+        snap=false;
+        if(j==0){
+          ticks=31;
+          snap=true;
+      }
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black,ticks,snap);
         knobs_supercollider.add(
           knob
           );
@@ -211,7 +247,8 @@ public Knob makeKnobs(String name, float minimum_val, float maximum_val, float i
     .setColorActive(white)
     .setColorValue(color_value)
     .setNumberOfTickMarks(tick_marks)
-    .snapToTickMarks(snap);
+    .snapToTickMarks(snap)
+    .hideTickMarks();
 
   return knob;
 }
