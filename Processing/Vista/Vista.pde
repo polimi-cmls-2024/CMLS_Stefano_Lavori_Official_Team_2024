@@ -28,21 +28,42 @@ String[][] names_2 = {{"Fold Amount", "Dist Amount", "Dry/Wet"},
   {"Feedback", "Width", "Dry/Wet Flanger"},
   {"Color", "Stereo", ""}
 };
+
 ArrayList<Slider2D> sliders = new ArrayList<Slider2D>();
-float[][] initVals = {{1, 1, 0, 1},
+
+
+float[][] initVals_1 = {{1, 1, 0, 1},
   {0, 1, 1, 0},
   {0, 1, 5, 1},
   {1, 1, 1, 0}};
-float[][] minVals  = {{1, 1, 0, 1},
+float[][] minVals_1  = {{1, 1, 0, 1},
   {0, 1, 1, 0},
   {-1, 1, 0, 1},
   {1, 1, 0.5, -1}};
-float[][] maxVals  = {{32, 32, 32, 4},
+float[][] maxVals_1= {{32, 32, 32, 4},
   {1, 32, 32, 20},
   {1, 32, 20, 10},
   {32, 10, 2, 1}};
 
+
 int slider_select = 0;
+
+float[][] initVals_2 = {{1, 1, 0},
+  {0, 440, 0.6},
+  {0.9, 0.010, 0},
+  {0, 1, 0}};
+float[][] minVals_2  = {{1, 1, 0},
+  {0, 0.1, 0.1},
+  {0, 0, 0},
+  {0, 0, 0}};
+ float[][] maxVals_2= {{60, 1000, 1},
+  {3, 20000, 1},
+  {1, 0.015, 1},
+  {1,1,0}};
+
+
+
+
 ControlP5 cp5;
 boolean toggleValue = false;
 
@@ -70,13 +91,13 @@ void setup() {
     switch(i) {
     case 0:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white);
         knobs_juice.add(
           knob
           );
@@ -84,13 +105,13 @@ void setup() {
       break;
     case 1:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-          Knob knob = makeKnobs(names_2[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width*11/16 + j*width/8 - 25,height*3/8,white, in_rainbows[i+1], white);
+          Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25,height*3/8,white, in_rainbows[i+1], white);
         knobs_juice.add(
           knob
           );
@@ -99,13 +120,13 @@ void setup() {
     case 2:
       for (int j = 0; j<4; j++) {
 
-        Knob knob = makeKnobs(names_1[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width*11/16 + j*width/8 - 25, height*9/16, white, in_rainbows[i+1], white);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*9/16, white, in_rainbows[i+1], white);
         knobs_juice.add(
           knob
           );
@@ -113,13 +134,13 @@ void setup() {
       break;
     case 3:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<2; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals[i][j], maxVals[i][j], initVals[i][j], width*12/16 + j*width/8 - 25, height*6/8, white, in_rainbows[4], white);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*12/16 + j*width/8 - 25, height*6/8, white, in_rainbows[4], white);
         knobs_juice.add(
           knob
           );
