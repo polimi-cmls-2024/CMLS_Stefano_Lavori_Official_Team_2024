@@ -11,8 +11,12 @@ int[] colorsSwitch = {0xff0066cc, 0xffcc0000, 0xff00994c, 0xffffdf0b};
 int[] in_rainbows = {0xffa2dce6, 0xffec2327, 0xffedb31e, 0xff45b74a, 0xfff36525, 0xff4686c7, 0xfff7ed4a};
 float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
+
 ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
+
+float Name0, Name1, Name2, x, y, z, oldZ;
+
 String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
   {"Trig probability", "Velocity loop length", "Trig loop length", "Rhythm permutations"},
   {"Glide", "Notes loop length", "Notes permutation", "Scale"},
@@ -24,7 +28,7 @@ String[][] names_2 = {{"Fold Amount", "Dist Amount", "Dry/Wet"},
   {"Feedback", "Width", "Dry/Wet Flanger"},
   {"Color", "Stereo", ""}
 };
-
+ArrayList<Slider2D> sliders = new ArrayList<Slider2D>();
 float[][] initVals = {{1, 1, 0, 1},
   {0, 1, 1, 0},
   {0, 1, 5, 1},
@@ -38,12 +42,12 @@ float[][] maxVals  = {{32, 32, 32, 4},
   {1, 32, 20, 10},
   {32, 10, 2, 1}};
 
-
+int slider_select = 0;
 ControlP5 cp5;
 boolean toggleValue = false;
 
 void setup() {
-  oscP5 = new OscP5(this, 12000);
+  oscP5 = new OscP5(this, 24);
   myRemoteLocation = new NetAddress("127.0.0.1", 57120);
 
   smooth();
@@ -127,12 +131,12 @@ void setup() {
     rect(i * width/8, 0, width/8, height*5/8);
   };
   for (int i = 0; i <3; i++) {
-    cp5.addSlider2D("Name"+i)
+    sliders.add(cp5.addSlider2D("Name"+i)
       .setPosition(width/20+i*width/6, height*11/16)
       .setMinMax(0, 0, 100, 100)
       .setSize(100, 150)
       .setColorBackground(0xff7d3c98)
-      ;
+      );
   };
 
 
@@ -148,13 +152,15 @@ void setup() {
   text("Folder&Distortion", width*13/16, height/16);
   text("Flanger", width*13/16, height*5/16);
   smooth();
+  
+  oldZ = 0;
 }
 
 void draw() {
+  // message for supercollider
   OscMessage myMessage = new OscMessage("/vars");
-  for (int i = 0; i < knobs.size(); i++) {
-    Knob singleKnob = knobs.get(i);
-
+  for (int i = 0; i < knobs_supercollider.size(); i++) {
+    Knob singleKnob = knobs_supercollider.get(i);
     float value = singleKnob.getValue();
     myMessage.add(value);
   }
@@ -178,4 +184,42 @@ public Knob makeKnobs(String name, float minimum_val, float maximum_val, float i
     .setColorValue(color_value);
 
   return knob;
+}
+
+/* incoming osc message are forwarded to the oscEvent method. */
+void oscEvent(OscMessage theOscMessage) {
+  /* print the address pattern and the typetag of the received OscMessage */
+  print("### received an osc message.");
+  print(" addrpattern: " + theOscMessage.addrPattern());
+  println(" X: " + theOscMessage.get(0).floatValue() + " Y: " + theOscMessage.get(1).floatValue() + " Z: " + theOscMessage.get(2).floatValue());
+  x = theOscMessage.get(0).floatValue();
+  y = theOscMessage.get(1).floatValue();
+  z = theOscMessage.get(2).floatValue();
+  // we check if there is a transition from 0 to 1 (release part of the pressing stage)
+  // of the z value of the joystick so we can detect when the button is pressed
+  if (oldZ < 0.5f && z > 0.5f){
+    slider_select = (slider_select + 1) % 4;
+    oldZ = 1;
+  }else if(oldZ > 0.5f && z < 0.5f){
+    oldZ = 0;
+  }
+  
+  if(slider_select != 3){
+    Slider2D curr_slider = sliders.get(slider_select);
+    float minX = curr_slider.getMinX();
+    float maxX = curr_slider.getMaxX();
+    
+    float minY = curr_slider.getMinY();
+    float maxY = curr_slider.getMaxY();
+    curr_slider.setValue(map_interval(x, minX, maxX), maxY-map_interval(y, minY, maxY));
+  }
+}
+
+public float map_interval(float n, float min, float max){
+  float mapped_n = ((max - min) * n) + min;
+  mapped_n *= 100;
+  mapped_n = round(mapped_n);
+  mapped_n /= 100;
+  
+  return mapped_n;
 }
