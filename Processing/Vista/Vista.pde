@@ -73,6 +73,34 @@ void setup() {
 
   smooth();
   cp5 = new ControlP5(this);
+  cp5.addCallback(
+    new CallbackListener(){
+      void controlEvent(CallbackEvent theEvent){
+        //print(theEvent);
+        switch(theEvent.getAction()){
+          case ControlP5.ACTION_RELEASE_OUTSIDE:
+          case ControlP5.ACTION_RELEASE:
+            // message for supercollider
+          OscMessage myMessage = new OscMessage("/vars");
+          for (int i = 0; i < knobs_supercollider.size(); i++) {
+            Knob singleKnob = knobs_supercollider.get(i);
+            float value = singleKnob.getValue();
+            myMessage.add(value);
+          }
+          for (int i = 0; i < sliders.size(); i++) {
+            Slider2D slid = sliders.get(i);
+            float valueX = slid.getCursorX();
+            myMessage.add(valueX);
+            float valueY = slid.getCursorY();
+            myMessage.add(valueY);
+          }
+          oscP5.send(myMessage, myRemoteLocation);
+          print("Hello!");
+          break;
+        }
+      }
+    }
+  );
   noStroke();
   size(1200, 650);
   for (int i = 0; i < colors.length; i++) {
@@ -221,14 +249,7 @@ void setup() {
 }
 
 void draw() {
-  // message for supercollider
-  OscMessage myMessage = new OscMessage("/vars");
-  for (int i = 0; i < knobs_supercollider.size(); i++) {
-    Knob singleKnob = knobs_supercollider.get(i);
-    float value = singleKnob.getValue();
-    myMessage.add(value);
-  }
-  oscP5.send(myMessage, myRemoteLocation);
+  
 }
 
 public Knob makeKnobs(String name, float minimum_val, float maximum_val, float initial_val, float x_pos, float y_pos,

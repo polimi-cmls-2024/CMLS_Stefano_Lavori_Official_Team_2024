@@ -1,5 +1,5 @@
 //Runna prima l'opzione, poi lancia il server
-s.options.numWireBufs = 450;
+s.options.numWireBufs = 250;
 s.boot;
 
 
@@ -66,7 +66,7 @@ s.reboot;
 ~amp = {
 	arg fundFreq, p_pose = 2, stiffness = 11;
 	var i = 0;
-	var n = 200;
+	var n = 100;
 	//var n_harmonics = (20000/fundFreq).floor;
 	// here we just divide by 1000 to have more sensibility on the input number
 	var stiffness_small = stiffness/(1000);
@@ -100,7 +100,7 @@ s.reboot;
 ~freq = {
 	arg fundFreq, p_pose = 2, stiffness = 0;
 	var i = 0;
-	var n = 200;
+	var n = 100;
 	//var n_harmonics = (20000/fundFreq).floor;
 	// here we just divide by 1000 to have more sensibility on the input number
 	var stiffness_small = stiffness/(1000);
@@ -285,7 +285,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 
 );
 };
-~scport.sendMsg('/trig', ~trigg, ~cnt);
+
 ))};
 ~dinamica = {Pdefn(\dynamics, Pfunc({if(~velocityLoop == 1,
 		{
@@ -609,36 +609,39 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 //Funzione che aggiorna in tempo reale i parametri che prende da una stringa
 (
 OSCdef(\fromProcessing, { |msg|
-	~step = msg[1];
-	~trig = msg[2];
-	~rot = msg[3];
-	~prob = msg[4];
-	~op = msg[5];
-	~loop = msg[6];
-	~loopLength = msg[7];
-	~trigPerm = msg[8];
+	~step = asInteger(floor(msg[1]));
+	~trig = asInteger(floor(msg[2]));
+	//~rot = asInteger(floor(msg[3]));
+	//~op = asInteger(floor(msg[4]));
+	//~prob = msg[5];
+	//~velocityLoopLength = floor(msg[6]);
+	//~loopLength = floor(msg[7]);
+	//~trigPerm = floor(msg[8]);
+	//~glide = msg[9];
+	//~noteLoopLength = floor(msg[10]);
+	//~notePerm = floor(msg[11]);
+	//~selectScale = asInteger(floor(msg[12]));
+	//~modLoopLength = msg[13];
+	//~interpol = msg[14];
+	//~pitchGranulator = msg[15]
+	//~dryWet = msg[16];
 
+	// Sliders
+	~standardDev = 2;
+	~expVal = 75;
 
-	~standardDev = msg[9];
-	~expVal = msg[10];
-	~glide = msg[11];
-	~noteLoopOn = msg[12];
-	~noteLoopLength = msg[13];
-	~notePerm = msg[14];
-	~selectScale = msg[15];
+	~velStandardDev = 0;
+	~velExpVal = 0.8;
 
-	~velStandardDev = msg[16];
-	~velExpVal = msg[17];
-	~velocityLoop = msg[18];
-	~velocityLoopLength = msg[19];
+	~modStandardDev = 1;
+	~modExpVal = 11;
 
-
-	~modStandardDev = msg[20];
-	~modExpVal = msg[21];
-	~interpol = msg[22];
-	~modulationLoopOn = msg[23];
-	~modLoopLength = msg[24];
-	msg[1].postln;
+	//buttons
+	//~loop = msg[23];
+	//~velocityLoop = msg[24];
+	//~noteLoopOn = msg[25];
+	//~modulationLoopOn = msg[26];
+	asInteger(floor(msg[1])).postln;
 }, '/vars');
 )
 
@@ -651,19 +654,4 @@ OSCdef(\fromProcessing, { |msg|
 //Non so se questa linea di codice servirà (ora sì perchè mando osc da sc).
 //Potrebbe essere una cosa da implementare in processing quando si mandano i dati.
 //Crea un net address (ora stiamo usando ip locale e la porta che sc sta ascoltando)
-~scport = NetAddr("127.0.0.1", NetAddr.langPort);
-
-
-
-
-//Isco il ricevitore dei trigger in processing deve avere questa forma. In particolare l'ID deve essere trig.
-(
-
-OSCdef(\prova, {|msc|
-	msc[1].postln;
-}, '/trig');
-
-)
-~rot;
-~rot = ~rot + i;
-
+~scport = NetAddr("127.0.0.1", 57120);
