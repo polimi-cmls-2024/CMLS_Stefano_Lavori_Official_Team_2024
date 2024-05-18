@@ -61,8 +61,8 @@ float[][] minVals_2  = {{1, 1, 0},
   {1, 0.015, 1},
   {1,1,0}};
 
-
-
+int ticks =1;
+boolean snap = false;
 
 ControlP5 cp5;
 boolean toggleValue = false;
@@ -91,27 +91,34 @@ void setup() {
     switch(i) {
     case 0:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,1,false);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white);
+        if(j == 1){
+          ticks = 999;
+          snap = true;
+        }
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white,ticks, snap);
+        knob.hideTickMarks();
         knobs_juice.add(
           knob
           );
+         ticks = 1;
+         snap=false;
       }
       break;
     case 1:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,1,false);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-          Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25,height*3/8,white, in_rainbows[i+1], white);
+          Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25,height*3/8,white, in_rainbows[i+1], white,1,false);
         knobs_juice.add(
           knob
           );
@@ -120,13 +127,13 @@ void setup() {
     case 2:
       for (int j = 0; j<4; j++) {
 
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,1,false);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*9/16, white, in_rainbows[i+1], white);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*9/16, white, in_rainbows[i+1], white,1,false);
         knobs_juice.add(
           knob
           );
@@ -134,13 +141,13 @@ void setup() {
       break;
     case 3:
       for (int j = 0; j<4; j++) {
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black,1,false);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<2; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*12/16 + j*width/8 - 25, height*6/8, white, in_rainbows[4], white);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*12/16 + j*width/8 - 25, height*6/8, white, in_rainbows[4], white,1, false);
         knobs_juice.add(
           knob
           );
@@ -189,7 +196,7 @@ void draw() {
 }
 
 public Knob makeKnobs(String name, float minimum_val, float maximum_val, float initial_val, float x_pos, float y_pos,
-  int color_label, int color_background, int color_value ) {
+  int color_label, int color_background, int color_value, int tick_marks, boolean snap) {
 
   Knob knob = cp5.addKnob(name)
     .setRange(minimum_val, maximum_val)
@@ -202,7 +209,9 @@ public Knob makeKnobs(String name, float minimum_val, float maximum_val, float i
     .setColorBackground(color_background)
     .setColorForeground(white)
     .setColorActive(white)
-    .setColorValue(color_value);
+    .setColorValue(color_value)
+    .setNumberOfTickMarks(tick_marks)
+    .snapToTickMarks(snap);
 
   return knob;
 }
