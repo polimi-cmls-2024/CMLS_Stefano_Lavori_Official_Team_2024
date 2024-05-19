@@ -609,46 +609,74 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 //Funzione che aggiorna in tempo reale i parametri che prende da una stringa
 (
 OSCdef(\fromProcessing, { |msg|
-	~step = asInteger(floor(msg[1]));
-	~trig = asInteger(floor(msg[2]));
-	//~rot = asInteger(floor(msg[3]));
-	//~op = asInteger(floor(msg[4]));
-	//~prob = msg[5];
-	//~velocityLoopLength = floor(msg[6]);
-	//~loopLength = floor(msg[7]);
-	//~trigPerm = floor(msg[8]);
-	//~glide = msg[9];
-	//~noteLoopLength = floor(msg[10]);
-	//~notePerm = floor(msg[11]);
-	//~selectScale = asInteger(floor(msg[12]));
-	//~modLoopLength = msg[13];
-	//~interpol = msg[14];
-	//~pitchGranulator = msg[15]
-	//~dryWet = msg[16];
+	~step = floor(msg[1]).asInteger;
+	~trig = floor(msg[2]).asInteger;
+	~rot = asInteger(floor(msg[3]));
+	~op = asInteger(floor(msg[4]));
+	~prob = msg[5];
+	~velocityLoopLength = floor(msg[6]).asInteger;
+	~loopLength = floor(msg[7]).asInteger;
+	~trigPerm = floor(msg[8]).asInteger;
+	~glide = floor(msg[9]*10)/10;
+	~noteLoopLength = floor(msg[10]).asInteger;
+	~notePerm = floor(msg[11]).asInteger;
+	~selectScale = floor(msg[12]).asInteger;
+	~modLoopLength = floor(msg[13]).asInteger;
+	~interpol = msg[14];
+	~pitchGranulator = msg[15];
+	~dryWet = (msg[16] * 2) - 1;
 
 	// Sliders
-	~standardDev = 2;
-	~expVal = 75;
+	//~standardDev = 2;
+	//~expVal = 75;
+	~expVal = msg[17] * 126 + 1;
+	~standardDev = (msg[18] * 39.9) + 0.1;
 
-	~velStandardDev = 0;
-	~velExpVal = 0.8;
+	//~velStandardDev = 0;
+	//~velExpVal = 0.8;
+	~velExpVal = (msg[19] * 0.9) + 0.1;
+	~velStandardDev = (msg[20] * 0.9) + 0.1;
 
-	~modStandardDev = 1;
-	~modExpVal = 11;
+	//~modStandardDev = 1;
+	//~modExpVal = 11;
+	~modExpVal = msg[21] * 18 + 2;
+	~modStandardDev = (msg[22] * 19.9) + 0.1;
 
 	//buttons
 	//~loop = msg[23];
 	//~velocityLoop = msg[24];
 	//~noteLoopOn = msg[25];
 	//~modulationLoopOn = msg[26];
-	asInteger(floor(msg[1])).postln;
+
+
+	~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
+	~scale = case(
+		{~selectScale == 1}, {Scale.chromatic},
+		{~selectScale == 2}, {Scale.major},
+		{~selectScale == 3}, {Scale.minor},
+		{~selectScale == 4}, {Scale.majorPentatonic},
+		{~selectScale == 5}, {Scale.minorPentatonic},
+		{~selectScale == 6}, {Scale.dorian},
+		{~selectScale == 7}, {Scale.lydian},
+		{~selectScale == 8}, {Scale.phrygian},
+		{~selectScale == 9}, {Scale.mixolydian},
+		{~selectScale == 10}, {Scale.iwato},
+	);
+
+	~dinamica.value;
+	~ritmo.value;
+	~modulazione.value;
+	~melodia.value;
+	Pdefn(\effect, ~dryWet);
+	(floor(msg[9]*10)/10).postln;
 }, '/vars');
 )
 
 //Mando nuovi parametri da sc a sc. L'OSCdef attiverà la funzione ogni volta che arriva un nuovo parmetro.
 ~scport.sendMsg('/vars', 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 //Verifichiamo che il valore si sia aggiornato
-~step;
+~glide;
+~trig;
 
 
 //Non so se questa linea di codice servirà (ora sì perchè mando osc da sc).

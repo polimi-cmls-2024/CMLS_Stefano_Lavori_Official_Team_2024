@@ -89,13 +89,13 @@ void setup() {
           }
           for (int i = 0; i < sliders.size(); i++) {
             Slider2D slid = sliders.get(i);
-            float valueX = slid.getCursorX();
-            myMessage.add(valueX);
-            float valueY = slid.getCursorY();
-            myMessage.add(valueY);
+            float[] values = slid.getArrayValue();
+            myMessage.add(values[0]);
+            println(values[0]);
+            myMessage.add(1 - values[1]);
+            println(values[1]);  
           }
           oscP5.send(myMessage, myRemoteLocation);
-          print("Hello!");
           break;
         }
       }
@@ -225,7 +225,7 @@ void setup() {
   for (int i = 0; i <3; i++) {
     sliders.add(cp5.addSlider2D("Name"+i)
       .setPosition(width/20+i*width/6, height*11/16)
-      .setMinMax(0, 0, 100, 100)
+      .setMinMax(0, 0, 1, 1)
       .setSize(100, 150)
       .setColorBackground(0xff7d3c98)
       );
