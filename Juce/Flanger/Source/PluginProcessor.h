@@ -10,6 +10,10 @@
 
 #include <JuceHeader.h>
 
+#define MAX_DELAY_TIME 2
+#define PI 3.14159265358979323846
+
+
 //==============================================================================
 /**
 */
@@ -56,7 +60,49 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
+    juce::dsp::WaveShaper<float> waveshaper;
+
+    float squareWave(float x) {
+
+        if (x >= -1 && x < 0) {
+            x = -1;
+        }
+        else if (x >= 0 && x <= 1) {
+            x = 1;
+        }
+
+        return x;
+    }
+
+    float triangleWave(float x) {
+        x *= 2;
+        if (x <= 0) {
+            return (x + 1)/2;
+        }
+        else {    
+            return (1 - x)/2;
+        }
+    }
+
+    float linear_interp(float sample_x, float sample_x1, float inPhase) {
+        return (1 - inPhase) * sample_x + inPhase * sample_x1;
+    }
+
 private:
     //==============================================================================
+    float LFO_phase;
+    float delayTimeSmooth;
+    float delayTimeSamples;
+    float feedback_l = 0;
+    float feedback_r = 0;
+    float delayReadHead;
+    float LFO_out = 0;
+
+    int circularBufferLength;
+    int circularBufferWriteHead;
+    std::unique_ptr<float> circularBufferLeft = nullptr;
+    std::unique_ptr<float> circularBufferRight = nullptr;
+    
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessor)
 };

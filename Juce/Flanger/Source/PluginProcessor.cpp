@@ -12,16 +12,20 @@
 //==============================================================================
 FlangerAudioProcessor::FlangerAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    )
 #endif
 {
+    waveshaper.functionToUse = [](float x) //init waveshaper function
+        {
+            return std::tanh(x);
+        };
 }
 
 FlangerAudioProcessor::~FlangerAudioProcessor()
@@ -36,29 +40,29 @@ const juce::String FlangerAudioProcessor::getName() const
 
 bool FlangerAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool FlangerAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool FlangerAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double FlangerAudioProcessor::getTailLengthSeconds() const
@@ -69,7 +73,7 @@ double FlangerAudioProcessor::getTailLengthSeconds() const
 int FlangerAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    // so this should be at least 1, even if you're not really implementing programs.
 }
 
 int FlangerAudioProcessor::getCurrentProgram()
@@ -77,24 +81,37 @@ int FlangerAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void FlangerAudioProcessor::setCurrentProgram (int index)
+void FlangerAudioProcessor::setCurrentProgram(int index)
 {
 }
 
-const juce::String FlangerAudioProcessor::getProgramName (int index)
+const juce::String FlangerAudioProcessor::getProgramName(int index)
 {
     return {};
 }
 
-void FlangerAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void FlangerAudioProcessor::changeProgramName(int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void FlangerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void FlangerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    // initialisation that you need
+
+    LFO_phase = 0;
+
+    circularBufferLength = sampleRate * MAX_DELAY_TIME;
+
+    circularBufferLeft.reset(new float[circularBufferLength]);
+    juce::zeromem(circularBufferLeft.get(), circularBufferLength * sizeof(float));
+    circularBufferRight.reset(new float[circularBufferLength]);
+    juce::zeromem(circularBufferRight.get(), circularBufferLength * sizeof(float));
+
+    circularBufferWriteHead = 0;
+
+    delayTimeSmooth = 1;
 }
 
 void FlangerAudioProcessor::releaseResources()
@@ -104,35 +121,35 @@ void FlangerAudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool FlangerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool FlangerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
     return true;
-  #else
+#else
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     // Some plugin hosts, such as certain GarageBand versions, will only
     // load plugins that support stereo bus layouts.
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
     // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
+#if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 #endif
 
-void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     // In case we have more outputs than inputs, this code clears any output
@@ -142,7 +159,7 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -150,12 +167,111 @@ void FlangerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
 
-        // ..do something to the data...
+    float* leftChannel = buffer.getWritePointer(0);
+    float* rightChannel = buffer.getWritePointer(1);
+
+
+
+    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+    {
+
+        int waveType = apvts.getRawParameterValue("Wave Type")->load();
+        float rate = apvts.getRawParameterValue("Rate")->load();
+        float depth = apvts.getRawParameterValue("Depth")->load();
+        float feedback = apvts.getRawParameterValue("Feedback")->load();
+        float width = apvts.getRawParameterValue("Width")->load();
+        float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
+        float color = apvts.getRawParameterValue("Color")->load();
+        float stereo = apvts.getRawParameterValue("Stereo")->load();
+
+        /*switch (waveType)
+        {
+        case 0:
+            LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
+            break;
+        case 1:
+            LFO_out = squareWave(LFO_phase);
+            break;
+        case 2:
+            LFO_out = triangleWave(LFO_phase);
+            break;
+        case 3:
+            LFO_out = LFO_phase;
+            break;
+        default:
+            break;
+        }*/
+
+
+        //LFO waveform selection
+        if (waveType == 0)
+            //LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
+            LFO_out = std::sin(2 * PI * LFO_phase);
+        else if (waveType == 1)
+            LFO_out = squareWave(LFO_phase);
+        else if (waveType == 2)
+            LFO_out = triangleWave(LFO_phase);
+        else if (waveType == 3)
+            LFO_out = LFO_phase;
+
+
+        //LFO_out = std::sin(2 * PI * LFO_phase);
+
+        LFO_phase += rate / getSampleRate(); //update LFO phase
+
+        if (LFO_phase > 1)
+        {
+            LFO_phase = -1;
+        }
+
+        LFO_out *= depth; //scale on depth
+
+        float lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.001f, width); //map in ms
+
+        //calculate delay time
+        delayTimeSmooth = delayTimeSmooth - 0.001 * (delayTimeSmooth - lfoOutMapped);
+        delayTimeSamples = delayTimeSmooth * getSampleRate();
+
+        //add feedbacks
+        circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
+        circularBufferRight.get()[circularBufferWriteHead] = rightChannel[sample] + feedback_r;
+
+        delayReadHead = circularBufferWriteHead - delayTimeSamples;//index to navigate delay buffer
+
+        if (delayReadHead < 0) {
+            delayReadHead = circularBufferLength + delayReadHead;
+        }
+
+        float delay_sample_left = circularBufferLeft.get()[(int)delayReadHead] * buffer.getSample(0, sample);
+        float delay_sample_right = circularBufferRight.get()[(int)delayReadHead] * buffer.getSample(1, sample);
+
+        //int readHeadInt_x = (int)delayReadHead;
+        //int readHeadInt_x1 = readHeadInt_x + 1;
+        //float readHeadRemainderFloat = delayReadHead - readHeadInt_x;
+        //if (readHeadInt_x >= circularBufferLength) {
+        //    readHeadInt_x -= circularBufferLength; //Wrapping around circular buffer if we are over the length
+        //}
+
+        //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_x], circularBufferLeft.get()[readHeadInt_x1], readHeadRemainderFloat);
+        //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_x], circularBufferRight.get()[readHeadInt_x1], readHeadRemainderFloat);
+
+        feedback_l = delay_sample_left * feedback;
+        feedback_r = delay_sample_right * feedback;
+
+        /*delay_sample_left += buffer.getSample(0, sample);
+        delay_sample_right += buffer.getSample(1, sample);*/
+
+
+        buffer.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
+        buffer.setSample(1, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+
+        circularBufferWriteHead++;
+        if (circularBufferWriteHead >= circularBufferLength) {
+            circularBufferWriteHead = 0;
+        }
     }
+
 }
 
 //==============================================================================
@@ -171,14 +287,14 @@ juce::AudioProcessorEditor* FlangerAudioProcessor::createEditor()
 }
 
 //==============================================================================
-void FlangerAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void FlangerAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void FlangerAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void FlangerAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -205,7 +321,7 @@ FlangerAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Rate", //ID
         "Rate", //Name
-        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.25f), //min, max, increment, skew factor
+        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.15f), //min, max, increment, skew factor
         0.5f)); //default value
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
@@ -223,8 +339,8 @@ FlangerAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Width", //ID
         "Width", //Name
-        juce::NormalisableRange<float>(0.000f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
-        0.01f)); //default value
+        juce::NormalisableRange<float>(0.001f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
+        0.05f)); //default value
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Dry/Wet", //ID
