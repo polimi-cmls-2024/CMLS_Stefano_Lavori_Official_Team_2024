@@ -129,7 +129,7 @@ s.reboot;
 	f;
 };
 
-SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.25, dryWet|
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.2, dryWet|
 	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
 	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
 	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
@@ -424,8 +424,9 @@ Ndef(\a, Pbind(
 
 )
 
-Ndef(\a).stop;
+Ndef(\a).pause;
 Ndef(\a).resume;
+
 
 
 
@@ -672,7 +673,16 @@ OSCdef(\fromProcessing, { |msg|
 	Pdefn(\Pgrain, ~pitchGranulator);
 	(floor(msg[9]*10)/10).postln;
 }, '/vars');
+
+
+OSCdef(\globalControls, {|msg|
+	if(msg[1] == 1, {Ndef(\a).resume}, {Ndef(\a).pause});
+	~bpm = msg[2];
+	t.tempo = ~bpm * 4 / 60;
+})
 )
+
+Pdefn(\Pgrain, 1);
 
 
 
