@@ -11,6 +11,7 @@ int[] colorsSwitch = {0xff0066cc, 0xffcc0000, 0xff00994c, 0xffffdf0b};
 int[] in_rainbows = {0xffa2dce6, 0xffec2327, 0xffedb31e, 0xff45b74a, 0xfff36525, 0xff4686c7, 0xfff7ed4a};
 float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
+ 
 
 ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
@@ -24,7 +25,7 @@ String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Log
 };
 
 String[][] names_2 = {{"Fold Amount", "Dist Amount", "F&D Dry/Wet"},
-  {"Wavelength", "Rate", "Depth"},
+  {"Wave type", "Rate", "Depth"},
   {"Feedback", "Width", "Flanger Dry/Wet"},
   {"Color", "Stereo", ""}
 };
@@ -32,11 +33,11 @@ String[][] names_2 = {{"Fold Amount", "Dist Amount", "F&D Dry/Wet"},
 ArrayList<Slider2D> sliders = new ArrayList<Slider2D>();
 
 
-float[][] initVals_1 = {{1, 1, 1, 1},
+float[][] initVals_1 = {{1, 1, 0, 1},
   {0, 1, 1, 0},
   {0, 1, 5, 1},
   {1, 0, 1, 0}};
-float[][] minVals_1  = {{1, 1, 1, 1},
+float[][] minVals_1  = {{1, 1, 0, 1},
   {0, 1, 1, 0},
   {-1, 1, 0, 1},
   {1, 0, 0.5, 0}};
@@ -91,9 +92,7 @@ void setup() {
             Slider2D slid = sliders.get(i);
             float[] values = slid.getArrayValue();
             myMessage.add(values[0]);
-            println(values[0]);
-            myMessage.add(1 - values[1]);
-            println(values[1]);  
+            myMessage.add(1 - values[1]);     
           }
           oscP5.send(myMessage, myRemoteLocation);
           break;
@@ -119,10 +118,7 @@ void setup() {
     switch(i) {
     case 0:
       for (int j = 0; j<4; j++) {
-        ticks = 31;
-        if(j == 3){
-          ticks = 3;
-        }
+        ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
         Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,ticks,true);
         knobs_supercollider.add(
           knob
@@ -130,26 +126,24 @@ void setup() {
 
       }
       for (int j = 0; j<3; j++) {
+        ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
         if(j == 1){
-          ticks = 999;
           snap = true;
         }
         Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white,ticks, snap);
         knobs_juice.add(
           knob
           );
-         ticks = 1;
          snap=false;
       }
       break;
     case 1:
       for (int j = 0; j<4; j++) {
+        ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
         if(j==1 || j== 2){
-        ticks = 31;
         snap = true;
         }
         if(j == 3){
-        ticks = 20;
         snap = true;
         }
         Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks,snap);
@@ -166,24 +160,10 @@ void setup() {
       break;
     case 2:
       for (int j = 0; j<4; j++) {
-        switch(j){
-        case 0:
-          ticks = 1;
-          snap = false;
-        break;
-        case 1:
-            ticks = 31;
-           snap = true;
-        break;
-        case 2:
-           ticks = 20;
-           snap = true;
-        break;
-        case 3:
-            ticks = 9;
-            snap = true;
-        break;
-        }
+        ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
+        if(j == 0){
+        snap = false;
+        } else snap = true;
 
         Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,ticks,snap);
         knobs_supercollider.add(
@@ -199,10 +179,9 @@ void setup() {
       break;
     case 3:
       for (int j = 0; j<4; j++) {
-        ticks=1;
+        ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
         snap=false;
         if(j==0){
-          ticks=31;
           snap=true;
       }
         Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black,ticks,snap);
@@ -222,34 +201,61 @@ void setup() {
     fill(colors[i]);
     rect(i * width/8, 0, width/8, height*5/8);
   };
+  //creation of sliders
   for (int i = 0; i <3; i++) {
     sliders.add(cp5.addSlider2D("Name"+i)
-      .setPosition(width/20+i*width/6, height*11/16)
+      .setPosition(width/35+i*width/6, height*11/16)
       .setMinMax(0, 0, 1, 1)
-      .setSize(100, 150)
+      .setSize(150, 150)
+       .setValue(0.4,0.9)
       .setColorBackground(0xff7d3c98)
+      .setColorCaptionLabel(0xffffc6ff)
+      .setColorValueLabel(0xffffc6ff)
+      .setLabelVisible(false)
       );
   };
+  
 
-
-  fill(241, 203, 255);
+  fill(0xff8e7ab5);
   rect(0, height*5/8, width/2, height);
-  fill(255, 40, 52);
+  fill(in_rainbows[4]);
   rect(width/2, 0, width/8, height);
   fill(40);
   rect(width*5/8, 0, width, height);
-  fill(70, 134, 199);
+  fill(245);
   textSize(20);
   textAlign(CENTER);
   text("Folder&Distortion", width*13/16, height/16);
   text("Flanger", width*13/16, height*5/16);
   smooth();
+   /* for(int i = 0;i<2;i++){
+      cp5.addButton("color"+i)
+     .setValue(0)
+     .setPosition(width/2+ 30, 150*i + 100)
+     .setSize(100,100)
+     ;
+  }*/
   
   oldZ = 0;
 }
 
 void draw() {
-  
+  for(int i =0; i<2;i++){
+  circle(width/2+width/16, 150*i + 100, 75);
+  }
+  rectMode(CENTER);
+  triangle(width/2+width/16+ )
+}
+
+void mouseClicked(){
+     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5){
+          println("Tasto 1");
+     }
+     
+     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5){
+          println("Tasto 2");
+     }
+     
 }
 
 public Knob makeKnobs(String name, float minimum_val, float maximum_val, float initial_val, float x_pos, float y_pos,
