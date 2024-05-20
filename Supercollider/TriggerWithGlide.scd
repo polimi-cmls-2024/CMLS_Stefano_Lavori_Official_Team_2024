@@ -129,7 +129,7 @@ s.reboot;
 	f;
 };
 
-SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.3, dryWet|
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.25, dryWet|
 	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
 	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
 	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
@@ -416,7 +416,8 @@ Ndef(\a, Pbind(
 	}),
 
 	\modulation, Pdefn(\variations, ~modulazione),
-	\dryWet, Pdefn(\effect, -1)
+	\dryWet, Pdefn(\effect, -1),
+	\rate, Pdefn(\Pgrain, 1)
 )
 );
 
@@ -668,15 +669,11 @@ OSCdef(\fromProcessing, { |msg|
 	~modulazione.value;
 	~melodia.value;
 	Pdefn(\effect, ~dryWet);
+	Pdefn(\Pgrain, ~pitchGranulator);
 	(floor(msg[9]*10)/10).postln;
 }, '/vars');
 )
 
-//Mando nuovi parametri da sc a sc. L'OSCdef attiverà la funzione ogni volta che arriva un nuovo parmetro.
-~scport.sendMsg('/vars', 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-//Verifichiamo che il valore si sia aggiornato
-~glide;
-~trig;
 
 
 //Non so se questa linea di codice servirà (ora sì perchè mando osc da sc).
