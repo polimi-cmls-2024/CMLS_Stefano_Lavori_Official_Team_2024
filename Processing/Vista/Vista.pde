@@ -11,7 +11,9 @@ int[] colorsSwitch = {0xff0066cc, 0xffcc0000, 0xff00994c, 0xffffdf0b};
 int[] in_rainbows = {0xffa2dce6, 0xffec2327, 0xffedb31e, 0xff45b74a, 0xfff36525, 0xff4686c7, 0xfff7ed4a};
 float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
- 
+
+int x_pos, y_pos, radius, n, t, rotate, steps_index, triggers_index, value_trig, Euclid_steps;
+ArrayList<Integer> triggers = new ArrayList<Integer>();
 
 ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
@@ -236,26 +238,61 @@ void setup() {
      ;
   }*/
   
+
   oldZ = 0;
+  
+  x_pos = width/2 + width/16;
+  y_pos = height - 100;
+  radius = 100;
+  n = (int)knobs_supercollider.get(0).getValue();
+  t = (int)knobs_supercollider.get(1).getValue();
+  rotate = (int)knobs_supercollider.get(2).getValue();
+  value_trig = 1;
+  triggers = calculateTriggers(n, t, rotate);
 }
 
 void draw() {
+  smooth();
+  rectMode(CORNER);
+  strokeWeight(0);
+  fill(in_rainbows[4]);
+  rect(width/2, 0, width/8, height);
+  strokeWeight(2);
   for(int i =0; i<2;i++){
   circle(width/2+width/16, 150*i + 100, 75);
   }
   rectMode(CENTER);
-  triangle(width/2+width/16+ )
-}
+  triangle(width/2+width/16 + 20, 100, width/2+width/16 - 20*cos(PI/3), 100 - 20*sin(PI/3), width/2+width/16 - 20*cos(PI/3), 100 + 20*sin(PI/3));
+  square(width/2+width/16, 250, 30);
+  n = (int)knobs_supercollider.get(0).getValue();
+  t = (int)knobs_supercollider.get(1).getValue();
+  rotate = (int)knobs_supercollider.get(2).getValue();
+  //fill(255, 40, 52);
+  triggers = calculateTriggers(n, t, rotate);
+  smooth();
+  noFill();
+  //circle(x, y, r);
 
-void mouseClicked(){
-     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5){
-          println("Tasto 1");
-     }
-     
-     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5){
-          println("Tasto 2");
-     }
-     
+  beginShape();
+  for (int i = 0; i< n; i++){
+    float angle = PI * 0.5 - i * TWO_PI / n;
+    float dx = radius/2 * cos(angle);
+    float dy = radius/2 * sin(angle);
+    if (triggers.get(i) == 1){
+      vertex(x_pos + dx, y_pos - dy);
+      stroke(0, 255);
+      strokeWeight(10);
+    }
+    else{
+      stroke(0, 127);
+      strokeWeight(10);
+    }
+
+    point(x_pos + dx, y_pos - dy);
+    stroke(0, 255);
+    strokeWeight(5);
+  }
+  endShape(CLOSE);
 }
 
 public Knob makeKnobs(String name, float minimum_val, float maximum_val, float initial_val, float x_pos, float y_pos,
@@ -292,8 +329,14 @@ void oscEvent(OscMessage theOscMessage) {
   // we check if there is a transition from 0 to 1 (release part of the pressing stage)
   // of the z value of the joystick so we can detect when the button is pressed
   if (oldZ < 0.5f && z > 0.5f){
+    Slider2D curr_slider = sliders.get(slider_select);
+    curr_slider.setColorBackground(0xff7d3c98);
     slider_select = (slider_select + 1) % 4;
+    if (slider_select < 3){
+      curr_slider.setColorBackground(0xffb399dd);
+    }
     oldZ = 1;
+    
   }else if(oldZ > 0.5f && z < 0.5f){
     oldZ = 0;
   }
@@ -316,4 +359,51 @@ public float map_interval(float n, float min, float max){
   mapped_n /= 100;
   
   return mapped_n;
+}
+
+ArrayList<Integer> calculateTriggers(int steps, int pulses, int rotate){
+  ArrayList<Integer> trigs = new ArrayList<Integer>();
+  
+  rotate += 1;
+  rotate = rotate % steps;
+  int bucket = 0;
+  
+  //fill track with rhythm
+  for(int i=0; i< steps; i++){
+    bucket += pulses;
+    if(bucket >= steps) {
+      bucket -= steps;
+      trigs.add(1);
+    } else {
+      trigs.add(0);
+    }
+   }
+
+  //rotate
+  if(rotate > 0){
+    trigs = rotateSeq(trigs, steps, rotate);
+  }
+  
+  
+  return trigs;
+
+}
+
+ArrayList<Integer> rotateSeq(ArrayList<Integer> seq2, int steps, int rotate){
+  ArrayList<Integer> output = new ArrayList<Integer>();
+  int val = steps - rotate;
+  for(int i = 0; i < seq2.size(); i++){
+    output.add(seq2.get(abs((i+val) % seq2.size())));
+  }
+  return output;
+}
+
+void mouseClicked(){
+     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5){
+          println("Tasto 1");
+     }
+     
+     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5){
+          println("Tasto 2");
+     }
 }
