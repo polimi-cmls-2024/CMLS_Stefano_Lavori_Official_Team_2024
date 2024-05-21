@@ -1,4 +1,4 @@
-sThe proposed application, provides a comprehensive and flexible environment for real-time sound creation and manipulation, offering users a wide range of tools and techniques to explore the possibilities of digital sound synthesis. Based on a hybrid approach that integrates concepts of additive synthesis, digital signal manipulation, and pattern generation, the application allows for a wide range of sonic and musical experiments.
+The proposed application, provides a comprehensive and flexible environment for real-time sound creation and manipulation, offering users a wide range of tools and techniques to explore the possibilities of digital sound synthesis. Based on a hybrid approach that integrates concepts of additive synthesis, digital signal manipulation, and pattern generation, the application allows for a wide range of sonic and musical experiments.
 In terms of sound synthesis, the application predominantly employs additive synthesis, specifically designed to simulate the vibration of a string. This method approach is a simplification of modal synthesis, where complex sound waves are approximated by summing multiple sine waves and involves generating complex sounds by summing multiple sinusoidal signals, each representing a harmonic component of the sound. The SynthDef defines the frequencies and amplitudes of these sinusoids based on a fundamental frequency and user-defined parameters such as stiffness and pose. This allows users to create rich and detailed harmonic spectra, enabling the creation of nuanced and dynamic sounds.
 Once the sound is generated through additive synthesis, the application includes a granular synthesizer for further sound manipulation. This granular synthesizer allows for the creation of complex sounds by combining sinusoidal signals through audio grains extracted from a buffer. The flexibility of the SynthDef allows users to creatively modulate and manipulate sounds through the application of filters, envelopes, and other effects.
 Additionally, the application offers a wide range of tools for generating and manipulating musical patterns. Using a combination of timed sequences and generative patterns, users can intuitively and dynamically control the trigger, duration, frequency, and other parameters of sounds. This approach enables the creation of complex and varied musical structures, suitable for both live performance and studio music composition.
@@ -49,9 +49,39 @@ Communication between Processing and SuperCollider via OSC
 The application uses the OscP5 library in Processing to manage communication via the OSC (Open Sound Control) protocol. This allows for sending messages between Processing and SuperCollider for real-time control of sound parameters.
 
 In the setup() method, an OSC connection is established between Processing and SuperCollider. Processing listens on port 24 for incoming OSC messages and sends messages to SuperCollider at the localhost address (127.0.0.1) on port 57120.
-
 The Processing GUI allows users to interact with various controls, such as knobs and sliders. When the user interacts with one of these controls, a callback event is generated. This event creates an OSC message containing the current values of all the controls and sends it to SuperCollider. SuperCollider receives these messages and updates the synthesizer parameters in real time based on the received values.
-
 Additionally, Processing can receive OSC messages from SuperCollider. When Processing receives an OSC message, it extracts the values contained in the message and uses them to update the GUI or for other necessary processing.
-
 This bidirectional communication between Processing and SuperCollider via OSC allows for smooth and dynamic control of sound operations, providing users with a powerful platform for real-time sound creation and manipulation.
+
+Sensor-Controlled Slider2D Integration with Bela
+
+The integration of external sensors with the Slider2D elements in the GUI is facilitated by Bela, serving as a crucial intermediary platform. When OSC messages with the address pattern "/sensor" are received in the oscEvent(OscMessage theOscMessage) function, Bela interprets and processes these messages. It acts as the bridge between the external sensors and the Processing environment, translating the sensor data into OSC messages that the GUI can understand.
+Specifically, Bela communicates with the external sensors, collecting data such as position, orientation, or any other relevant parameters. It then packages this data into OSC messages and sends them to the Processing environment. Within Processing, the oscEvent function receives these OSC messages, extracts the necessary data, and applies it to dynamically adjust the positions and configurations of the Slider2D controls.
+By leveraging Bela's capabilities, the GUI achieves real-time responsiveness to sensor input. This integration enables users to interact intuitively with the Slider2D controls, manipulating two-dimensional parameters within the Processing environment based on the data received from external sensors. Thus, Bela plays a pivotal role in enhancing the user experience by providing seamless and precise control over specific parameters in the GUI through sensor input.
+
+JUCE-Based VST3 Plugin
+
+In the first VST3 plugin developed using the JUCE framework, we've implemented two essential audio effects: distortion and folding. These effects are fundamental in shaping and enhancing audio signals, providing users with creative tools for sound manipulation.
+
+The distortion effect implemented in our plugin introduces harmonic richness and saturation to audio signals. This effect is achieved by non-linearly amplifying the input signal, causing signal clipping and introducing harmonic overtones. By adjusting parameters such as the distortion amount, users can control the intensity of the effect, ranging from subtle warmth to aggressive saturation.
+
+The folding effect, also known as wavefolding, is a unique form of distortion that creates complex waveform shapes by folding parts of the signal back onto itself. This effect adds harmonically rich overtones and creates unique timbral characteristics in audio signals. In our plugin, the folding effect is achieved by dynamically manipulating the amplitude of the audio signal, folding it back upon exceeding predefined thresholds. Users can adjust parameters such as the folding amount to control the intensity of folding, allowing for versatile sound sculpting possibilities.
+
+In the second plugin, we've implemented the flanger effect to offer users a versatile audio modulation tool for creating dynamic and immersive soundscapes.
+
+The flanger effect is a classic modulation effect characterized by its sweeping, comb-filter-like sound. It works by modulating a delayed version of the input signal and mixing it with the original signal, resulting in a distinct sweeping effect with notches in the frequency spectrum. 
+
+Key Parameters:
+
+Wave Type: Allows users to select the waveform shape used for modulation, offering options such as sine, square, triangle, or custom waveforms.
+Rate: Controls the speed of modulation, determining how quickly the flanger sweeps through the audio spectrum.
+Depth: Adjusts the intensity of modulation, controlling the amplitude of the modulated signal.
+Feedback: Sets the feedback level of the effect, influencing the amount of signal fed back into the modulation loop.
+Width: Determines the width of the modulation, controlling the range of frequencies affected by the flanger effect.
+Dry/Wet Mix: Balances the ratio between the dry (original) and wet (processed) signals, allowing users to blend the effect with the dry signal seamlessly.
+Color: Adjusts the tonal character of the effect, offering tonal shaping options to match the desired sonic aesthetic.
+Stereo Spread: Controls the stereo width of the effect, allowing users to adjust the spatial distribution of the modulated signal.
+Modulation Process:
+The flanger effect is achieved by modulating a delayed version of the input signal using an LFO (Low-Frequency Oscillator). The LFO generates a periodic waveform, such as a sine, square, or triangle wave, which is then used to modulate the delay time of the delayed signal. The modulated delayed signal is mixed with the original signal, resulting in the characteristic sweeping effect of the flanger.
+
+By integrating these effects into our plugin, we provide users with powerful tools for shaping and enhancing their audio productions. 
