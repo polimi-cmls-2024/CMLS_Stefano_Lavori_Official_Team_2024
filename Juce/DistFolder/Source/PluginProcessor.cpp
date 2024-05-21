@@ -192,9 +192,9 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
             *buffer.getWritePointer(channel, sample) = waveshaper.processSample(*buffer.getWritePointer(channel, sample) * dist_amount); //distortion implementation
                      
-            //*buffer.getWritePointer(channel, sample) = *buffer.getWritePointer(channel, sample) * dry_wet + dry_sample * (1.0f - dry_wet);
+            *buffer.getWritePointer(channel, sample) = std::tanh(*buffer.getWritePointer(channel, sample) * dry_wet + dry_sample * (1.0f - dry_wet));
    
-            *buffer.getWritePointer(channel, sample) = juce::jlimit(-0.1f, 0.1f, *buffer.getWritePointer(channel, sample));
+            //*buffer.getWritePointer(channel, sample) = juce::jlimit(-0.1f, 0.1f, *buffer.getWritePointer(channel, sample));
         }
     }
 }
