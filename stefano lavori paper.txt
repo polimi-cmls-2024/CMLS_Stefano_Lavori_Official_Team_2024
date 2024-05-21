@@ -1,14 +1,19 @@
 The proposed application, provides a comprehensive and flexible environment for real-time sound creation and manipulation, offering users a wide range of tools and techniques to explore the possibilities of digital sound synthesis. Based on a hybrid approach that integrates concepts of additive synthesis, digital signal manipulation, and pattern generation, the application allows for a wide range of sonic and musical experiments.
 In terms of sound synthesis, the application predominantly employs additive synthesis, specifically designed to simulate the vibration of a string. This method approach is a simplification of modal synthesis, where complex sound waves are approximated by summing multiple sine waves and involves generating complex sounds by summing multiple sinusoidal signals, each representing a harmonic component of the sound. The SynthDef defines the frequencies and amplitudes of these sinusoids based on a fundamental frequency and user-defined parameters such as stiffness and pose. This allows users to create rich and detailed harmonic spectra, enabling the creation of nuanced and dynamic sounds.
-Once the sound is generated through additive synthesis, the application includes a granular synthesizer for further sound manipulation. This granular synthesizer allows for the creation of complex sounds by combining sinusoidal signals through audio grains extracted from a buffer. The flexibility of the SynthDef allows users to creatively modulate and manipulate sounds through the application of filters, envelopes, and other effects.
+Once the sound is generated through additive synthesis, the application includes a granulator for further sound manipulation, and it allows for the creation of complex sounds by combining sinusoidal signals through audio grains extracted from a buffer. The flexibility of the SynthDef allows users to creatively modulate and manipulate sounds through the application of filters, envelopes, and other effects.
 Additionally, the application offers a wide range of tools for generating and manipulating musical patterns. Using a combination of timed sequences and generative patterns, users can intuitively and dynamically control the trigger, duration, frequency, and other parameters of sounds. This approach enables the creation of complex and varied musical structures, suitable for both live performance and studio music composition.
 It is important to understand the philosophy of our instrument: the process of creating rhythms and melodies is purely generative, giving the user the freedom to explore uncharted territories by interacting with a system designed to suggest new directions for the musician.
 The extensibility of the application make it suitable for a wide range of musical contexts, allowing users to explore new frontiers in interactive music composition. By giving the user control over randomness, we have created a system that excels in experimenting with polyrhythms and complex melodies, while also providing the ability to improvise solo or with other musicians
 
 Additive Synthesis: Simulating String Vibration
-In this application, the string's vibration is simulated by generating an array of frequencies corresponding to the harmonic series of a vibrating string. Each frequency is slightly detuned to simulate the natural imperfections in a real string. The detuning is controlled by a stiffness parameter, which adjusts both a constant detune applied to all harmonic frequencies and a variable part that depends on the harmonic number.
-Amplitude arrays are created to define the strength of each harmonic, influenced by factors such as the position on the string where it is plucked (p_pose). These amplitudes are calculated using a formula that simulates the energy distribution of a real vibrating string, resulting in a more realistic sound.
-This additive synthesis approach allows for precise control over the harmonic content of the sound, enabling the creation of rich, complex timbres.
+In this application, the string's vibration is simulated by generating an array of frequencies and amplitudes corresponding to the harmonic series of a vibrating string. We begin with the ideal implementation of a string, where each frequency is a multiple of the fundamental frequency of the string. The amplitudes of each frequency are influenced by factors such as the plucking position on the string (p_pose). These amplitudes are calculated using a formula based on the d’alambert equation that simulates the energy distribution of a real vibrating string, resulting in a more realistic sound:
+(Formula ampiezze)
+We also considered the condition where the stiffness of the string is relevant. As an effect, each frequency is slightly detuned to simulate the natural imperfections in a real string. The detuning is controlled by a stiffness parameter, which adjusts both a constant detune applied to all harmonic frequencies and a variable part that depends on the harmonic number. This also considers the real theory based on the d’Alambert equation with a fourth derivative component that takes the stiffness into consideration:
+(Formula equazione differenziale con quarto grado)
+As a solution we come up with a new formula for calculating each frequency harmonic:
+(Formula frequenze deviate)
+The value of beta that gave us a more realistic sound was 0,011.
+This additive synthesis approach was used because much simpler to implement compared to real implementation of modal synthesis, even though it may increase CPU usage. To reduce the stress of the CPU we can reduce the number of harmonics that our Synth calculates.
 
 
 Pattern Generation
@@ -27,22 +32,19 @@ Modulation is another key aspect of the pattern generation process. Parameters s
 The modulation loop operates similarly to the rhythmic loop, where a sequence of modulation values is continuously rotated and updated. This sequence can be influenced by Gaussian distributions, allowing for controlled randomness in the modulation values. By adjusting parameters like standard deviation and expected value, users can fine-tune the range and variability of the modulation. In summary, the pattern generation in this application is a sophisticated process that combines deterministic algorithms, such as Euclidean rhythms, with stochastic elements, like random sequences and Gaussian-distributed modulation values. These patterns are dynamically manipulated and can be looped, rotated, and modulated, providing a rich and versatile framework for generative music.
 
 Graphical User Interface (GUI) Implementation:
-
-The graphical user interface (GUI) in the provided code is crucial for facilitating user interaction and control over sound synthesis and processing operations. Implemented using the ControlP5 library in Processing, this GUI comprises various interactive elements such as toggles, knobs, and sliders.
-
+The graphical user interface (GUI) in the provided code is crucial for facilitating user interaction and control over sound synthesis and processing operations. Implemented using the ControlP5 library in Processing, this GUI comprises various interactive elements such as toggles, knobs, and sliders. The left side and central part of the view contains all the parameters that control the generative synth in SuperCollider, while the right side contains all the controls of the Folder&Distortion and Flanger VST3 plugins.
 Toggle Buttons for Mode Selection:
-At the top of the GUI window, horizontal toggle buttons are prominently displayed, each representing a distinct operational mode. These buttons allow users to seamlessly switch between different modes of operation, enhancing flexibility and ease of use.
+At the top left of the GUI window, horizontal toggle buttons are prominently displayed, each representing a distinct operational mode. These buttons allow users to seamlessly toggle the loop modes, enhancing flexibility and ease of use.
 
 Knobs for Parameter Adjustment:
-Below the toggle buttons, the GUI features several blocks containing knobs, each dedicated to controlling specific parameters related to sound synthesis and processing. These knobs, created using the addKnob function from ControlP5, enable users to finely adjust parameters such as Euclid steps, trig probability, velocity loop length, and modulation loop length.
+The GUI features several blocks containing knobs, each dedicated to controlling specific parameters related to sound synthesis and processing. These knobs, created from the ControlP5 library, enable users to finely adjust the parameters of the application.
 
 Slider Controls for Two-Dimensional Parameters:
-In addition to knobs, the GUI incorporates slider controls for manipulating two-dimensional parameters. These sliders, implemented using the addSlider2D function, provide users with an intuitive way to adjust parameters within a defined range by visually positioning a point on the interface.
+In addition to knobs, the GUI incorporates slider controls for manipulating two-dimensional parameters. These sliders, provide users with an intuitive way to adjust parameters within a defined range by visually positioning a point on the interface. They control the expected value (x direction) and standard deviation (y direction) of the distribution of notes, velocity, and modulation (plucking position of the string) respectively.
 
+Control section
+In the middle part of the GUI we can see three different controls which allows the user to stop or resume the generative synthesiser. In addition the user can control the BPM of the sequence, while in the bottom of the GUI the user can observe the shape of the Euclidean rhythm, which allows for a visual representation of the sequence.
 Overall, the GUI enhances user interaction by offering tactile controls for adjusting parameters and exploring various sonic possibilities within the Processing environment. It provides a visually appealing and user-friendly interface for controlling sound synthesis and processing operations.
-
-
-
 
 Communication between Processing and SuperCollider via OSC
 
@@ -84,4 +86,4 @@ Stereo Spread: Controls the stereo width of the effect, allowing users to adjust
 Modulation Process:
 The flanger effect is achieved by modulating a delayed version of the input signal using an LFO (Low-Frequency Oscillator). The LFO generates a periodic waveform, such as a sine, square, or triangle wave, which is then used to modulate the delay time of the delayed signal. The modulated delayed signal is mixed with the original signal, resulting in the characteristic sweeping effect of the flanger.
 
-By integrating these effects into our plugin, we provide users with powerful tools for shaping and enhancing their audio productions. 
+By integrating these effects into our plugin, we provide users with powerful tools for shaping and enhancing their audio productions.

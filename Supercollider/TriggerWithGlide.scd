@@ -64,28 +64,10 @@ s.reboot;
 
 
 ~amp = {
-	arg fundFreq, p_pose = 2, stiffness = 11;
+	arg fundFreq, p_pose = 2;
 	var i = 0;
 	var n = 100;
-	//var n_harmonics = (20000/fundFreq).floor;
-	// here we just divide by 1000 to have more sensibility on the input number
-	var stiffness_small = stiffness/(1000);
-	// This is a constant detune that will be applied to each frequency mode except the fundamental
-	var detune = stiffness_small + (stiffness_small.squared);
-	// This is a part of the detuning that will depend on the frequency mode
-	var variable_part = pi.squared * stiffness_small.squared/8;
-	// Frequency array creation (here we apply the detuning to each frequency mode)
-	//f = [fundFreq, Array.fill(249, {arg i; if( ((i+1)*fundFreq) < 20000,
-	//	{(i+2)*fundFreq * (1 + detune + ((i+1).squared * variable_part))},
-	//	{0}
-	//)
-	//})];
-	// Amplitude array creation
-	//a = Array.fill(250, {arg i; if( ((i+1)*fundFreq) < 20000,
-	//	{((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose)},
-	//	{0}
-	//)}
-	//);
+	// Amplpitude array creation
 	a = Array.fill(n,{0});
     n.do({
 		a[i] =((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose);
@@ -98,10 +80,9 @@ s.reboot;
 };
 
 ~freq = {
-	arg fundFreq, p_pose = 2, stiffness = 0;
+	arg fundFreq, stiffness = 0;
 	var i = 0;
 	var n = 100;
-	//var n_harmonics = (20000/fundFreq).floor;
 	// here we just divide by 1000 to have more sensibility on the input number
 	var stiffness_small = stiffness/(1000);
 	// This is a constant detune that will be applied to each frequency mode except the fundamental
@@ -109,17 +90,6 @@ s.reboot;
 	// This is a part of the detuning that will depend on the frequency mode
 	var variable_part = pi.squared * stiffness_small.squared/8;
 	// Frequency array creation (here we apply the detuning to each frequency mode)
-	//f = [fundFreq, Array.fill(249, {arg i; if( ((i+1)*fundFreq) < 20000,
-	//	{(i+2)*fundFreq * (1 + detune + ((i+1).squared * variable_part))},
-	//	{0}
-	//)
-	//})];
-	// Amplitude array creation
-	//a = Array.fill(250, {arg i; if( ((i+1)*fundFreq) < 20000,
-	//	{((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose)},
-	//	{0}
-	//)}
-	//);
 	f = Array.fill(n,{0});
     n.do({
 		f[i] =(i+1)*fundFreq * (1 + detune + ((i+1).squared * variable_part));
@@ -131,15 +101,12 @@ s.reboot;
 
 SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.2, dryWet|
 	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
-	// Initialization of frequency and amplitude arrays (initially all zeros), and envelope
-	//amp = NamedControl.ar(\amp, Array.fill(250,{0}));
-	//freq = NamedControl.ar(\freq , Array.fill(250,{0}));
-    amp = ~amp.value(midinote.midicps, modulation, 11) * vel;
-    freq = ~freq.value(midinote.midicps,5, 11);
+    amp = ~amp.value(midinote.midicps, modulation) * vel;
+    freq = ~freq.value(midinote.midicps, 11);
 	env = EnvGen.kr(Env.perc(0.01, 0.2 + vel, 1, curve:-4), trig, doneAction: 2);
 	// All sine waves summed together
 	x = SinOsc.ar(freq, 0, amp).sum;
-
+	// We implement the granulator effect
 	ptr = Phasor.ar(0, BufRateScale.ir(0), 0, BufFrames.ir(0));
 	maxgraindur = ptrdelay / rate;
 	BufWr.ar(x * env, buf, ptr);
@@ -158,7 +125,7 @@ SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate 
 }).add;
 
 
-
+// Function to create the Euclid sequence
 ~euclid = {
 	arg steps, pulses, rotate;
 	var rhythm = Array.newClear(steps), bucket = 0;
