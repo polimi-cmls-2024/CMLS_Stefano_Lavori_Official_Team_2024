@@ -186,6 +186,9 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         float color = apvts.getRawParameterValue("Color")->load();
         float stereo = apvts.getRawParameterValue("Stereo")->load();
 
+        if (feedback == 1)
+            feedback = 0.99;
+
         /*switch (waveType)
         {
         case 0:
@@ -232,16 +235,16 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
         //calculate delay time
         delayTimeSmooth_l = delayTimeSmooth_l - 0.001 * (delayTimeSmooth_l - lfoOutMapped);
-        delayTimeSmooth_r = delayTimeSmooth_r - 0.001 * (delayTimeSmooth_r - lfoOutMapped - (0.005 * stereo));
+        delayTimeSmooth_r = delayTimeSmooth_r - 0.001 * (delayTimeSmooth_r - lfoOutMapped - (0.01 * stereo));
         delayTimeSamples_l = delayTimeSmooth_l * getSampleRate();
         delayTimeSamples_r = delayTimeSmooth_r * getSampleRate();
 
         //overdrive feedback
-        drive_l = std::tanh(std::pow(2,feedback_l));
+        drive_l = std::tanh(std::pow(2, feedback_l));
         drive_r = std::tanh(std::pow(2, feedback_r));
 
-        feedback_l = (1 - color) * feedback_l + color * drive_l;
-        feedback_r = (1 - color) * feedback_r + color * drive_r;
+        feedback_l = std::tanh(feedback_l + color * drive_l);
+        feedback_r = std::tanh(feedback_r + color * drive_r);
 
         //add feedbacks
         circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
@@ -354,7 +357,7 @@ FlangerAudioProcessor::createParameterLayout()
         "Width", //ID
         "Width", //Name
         juce::NormalisableRange<float>(0.001f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
-        0.05f)); //default value
+        0.005f)); //default value
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Dry/Wet", //ID
@@ -372,7 +375,7 @@ FlangerAudioProcessor::createParameterLayout()
         "Stereo", //ID
         "Stereo", //Name
         juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        1.f)); //default value
+        0.5f)); //default value
 
     return layout;
 }
