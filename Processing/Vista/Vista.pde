@@ -53,16 +53,16 @@ int slider_select = 0;
 
 float[][] initVals_2 = {{1, 1, 0},
   {0, 440, 0.6},
-  {0.9, 0.010, 0},
+  {0.9, 0, 0},
   {0, 1, 0}};
 float[][] minVals_2  = {{1, 1, 0},
   {0, 0.1, 0.1},
   {0, 0, 0},
   {0, 0, 0}};
- float[][] maxVals_2= {{60, 1000, 1},
+float[][] maxVals_2= {{60, 1000, 1},
   {3, 20000, 1},
-  {1, 0.015, 1},
-  {1,1,0}};
+  {1, 100, 1},
+  {1, 1, 0}};
 
 int ticks =1;
 boolean snap = false;
@@ -77,30 +77,30 @@ void setup() {
   smooth();
   cp5 = new ControlP5(this);
   cp5.addCallback(
-    new CallbackListener(){
-      void controlEvent(CallbackEvent theEvent){
-        //print(theEvent);
-        switch(theEvent.getAction()){
-          case ControlP5.ACTION_RELEASE_OUTSIDE:
-          case ControlP5.ACTION_RELEASE:
-            // message for supercollider
-          OscMessage myMessage = new OscMessage("/vars");
-          for (int i = 0; i < knobs_supercollider.size(); i++) {
-            Knob singleKnob = knobs_supercollider.get(i);
-            float value = singleKnob.getValue();
-            myMessage.add(value);
-          }
-          for (int i = 0; i < sliders.size(); i++) {
-            Slider2D slid = sliders.get(i);
-            float[] values = slid.getArrayValue();
-            myMessage.add(values[0]);
-            myMessage.add(1 - values[1]);     
-          }
-          oscP5.send(myMessage, myRemoteLocation);
-          break;
+    new CallbackListener() {
+    void controlEvent(CallbackEvent theEvent) {
+      //print(theEvent);
+      switch(theEvent.getAction()) {
+      case ControlP5.ACTION_RELEASE_OUTSIDE:
+      case ControlP5.ACTION_RELEASE:
+        // message for supercollider
+        OscMessage myMessage = new OscMessage("/vars");
+        for (int i = 0; i < knobs_supercollider.size(); i++) {
+          Knob singleKnob = knobs_supercollider.get(i);
+          float value = singleKnob.getValue();
+          myMessage.add(value);
         }
+        for (int i = 0; i < sliders.size(); i++) {
+          Slider2D slid = sliders.get(i);
+          float[] values = slid.getArrayValue();
+          myMessage.add(values[0]);
+          myMessage.add(1 - values[1]);
+        }
+        oscP5.send(myMessage, myRemoteLocation);
+        break;
       }
     }
+  }
   );
   noStroke();
   size(1200, 650);
@@ -121,40 +121,39 @@ void setup() {
     case 0:
       for (int j = 0; j<4; j++) {
         ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,ticks,true);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks, true);
         knobs_supercollider.add(
           knob
           );
-
       }
       for (int j = 0; j<3; j++) {
         ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
-        if(j == 1){
+        if (j == 1) {
           snap = true;
         }
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white,ticks, snap);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height/8, white, in_rainbows[i+1], white, ticks, snap);
         knobs_juice.add(
           knob
           );
-         snap=false;
+        snap=false;
       }
       break;
     case 1:
       for (int j = 0; j<4; j++) {
         ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
-        if(j==1 || j== 2){
-        snap = true;
+        if (j==1 || j== 2) {
+          snap = true;
         }
-        if(j == 3){
-        snap = true;
+        if (j == 3) {
+          snap = true;
         }
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks,snap);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks, snap);
         knobs_supercollider.add(
           knob
-          );     
+          );
       }
       for (int j = 0; j<3; j++) {
-          Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25,height*3/8,white, in_rainbows[i+1], white,1,false);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*3/8, white, in_rainbows[i+1], white, 1, false);
         knobs_juice.add(
           knob
           );
@@ -163,17 +162,17 @@ void setup() {
     case 2:
       for (int j = 0; j<4; j++) {
         ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
-        if(j == 0){
-        snap = false;
+        if (j == 0) {
+          snap = false;
         } else snap = true;
 
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white,ticks,snap);
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks, snap);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*9/16, white, in_rainbows[i+1], white,1,false);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*9/16, white, in_rainbows[i+1], white, 1, false);
         knobs_juice.add(
           knob
           );
@@ -183,16 +182,16 @@ void setup() {
       for (int j = 0; j<4; j++) {
         ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
         snap=false;
-        if(j==0){
+        if (j==0) {
           snap=true;
-      }
-        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black,ticks,snap);
+        }
+        Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], black, ticks, snap);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<2; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*12/16 + j*width/8 - 25, height*6/8, white, in_rainbows[4], white,1, false);
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*12/16 + j*width/8 - 25, height*6/8, white, in_rainbows[4], white, 1, false);
         knobs_juice.add(
           knob
           );
@@ -209,38 +208,33 @@ void setup() {
       .setPosition(width/35+i*width/6, height*11/16)
       .setMinMax(0, 0, 1, 1)
       .setSize(150, 150)
-       .setValue(0.4,0.9)
+      .setValue(0.4, 0.9)
       .setColorBackground(0xff7d3c98)
-      .setColorCaptionLabel(0xffffc6ff)
-      .setColorValueLabel(0xffffc6ff)
+      .setColorCaptionLabel(0xff8e7ab5)
+      .setColorValueLabel(0xff8e7ab5)
       .setLabelVisible(false)
       );
   };
-  
-
+   //creation of control knob
+   Knob knob = makeKnobs("BPM", 30,300,120, width/2+width/30, height*9/16,white, black, white, 270, true);
+   knob.setRadius(37.5);
+   
   fill(0xff8e7ab5);
-  rect(0, height*5/8, width/2, height);
+  rect(0, height*5/8, width/2, height);  //slider block
   fill(in_rainbows[4]);
-  rect(width/2, 0, width/8, height);
+  rect(width/2, 0, width/8, height);   //control block
   fill(40);
-  rect(width*5/8, 0, width, height);
+  rect(width*5/8, 0, width, height);   //effect block
   fill(245);
   textSize(20);
   textAlign(CENTER);
   text("Folder&Distortion", width*13/16, height/16);
   text("Flanger", width*13/16, height*5/16);
   smooth();
-   /* for(int i = 0;i<2;i++){
-      cp5.addButton("color"+i)
-     .setValue(0)
-     .setPosition(width/2+ 30, 150*i + 100)
-     .setSize(100,100)
-     ;
-  }*/
-  
+
 
   oldZ = 0;
-  
+
   x_pos = width/2 + width/16;
   y_pos = height - 100;
   radius = 100;
@@ -255,15 +249,37 @@ void draw() {
   smooth();
   rectMode(CORNER);
   strokeWeight(0);
-  fill(in_rainbows[4]);
+  fill(40);
   rect(width/2, 0, width/8, height);
   strokeWeight(2);
-  for(int i =0; i<2;i++){
-  circle(width/2+width/16, 150*i + 100, 75);
-  }
-  rectMode(CENTER);
+  //creation of play/stop buttons
+  fill(in_rainbows[3]);
+  stroke(colors[2]);
+  circle(width/2+width/16, 100, 75);
   triangle(width/2+width/16 + 20, 100, width/2+width/16 - 20*cos(PI/3), 100 - 20*sin(PI/3), width/2+width/16 - 20*cos(PI/3), 100 + 20*sin(PI/3));
+  fill(in_rainbows[1]);
+  stroke(colors[1]);
+  circle(width/2+width/16, 250, 75);
+  rectMode(CENTER);
   square(width/2+width/16, 250, 30);
+
+  if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5) {
+    fill(colors[2]);
+    stroke(colors[2]);
+    triangle(width/2+width/16 + 20, 100, width/2+width/16 - 20*cos(PI/3), 100 - 20*sin(PI/3), width/2+width/16 - 20*cos(PI/3), 100 + 20*sin(PI/3));
+  }
+  if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5) {
+    fill(colors[1]);
+    stroke(colors[1]);
+    square(width/2+width/16, 250, 30);
+  }
+  //writing play and stop
+  fill(245);
+  textSize(20);
+  textAlign(CENTER);
+  text("Play", width/2+width/16, 165);
+  text("Stop", width/2+width/16, 315);
+  
   n = (int)knobs_supercollider.get(0).getValue();
   t = (int)knobs_supercollider.get(1).getValue();
   rotate = (int)knobs_supercollider.get(2).getValue();
@@ -274,16 +290,15 @@ void draw() {
   //circle(x, y, r);
 
   beginShape();
-  for (int i = 0; i< n; i++){
+  for (int i = 0; i< n; i++) {
     float angle = PI * 0.5 - i * TWO_PI / n;
     float dx = radius/2 * cos(angle);
     float dy = radius/2 * sin(angle);
-    if (triggers.get(i) == 1){
+    if (triggers.get(i) == 1) {
       vertex(x_pos + dx, y_pos - dy);
       stroke(0, 255);
       strokeWeight(10);
-    }
-    else{
+    } else {
       stroke(0, 127);
       strokeWeight(10);
     }
@@ -328,82 +343,80 @@ void oscEvent(OscMessage theOscMessage) {
   z = theOscMessage.get(2).floatValue();
   // we check if there is a transition from 0 to 1 (release part of the pressing stage)
   // of the z value of the joystick so we can detect when the button is pressed
-  if (oldZ < 0.5f && z > 0.5f){
+  if (oldZ < 0.5f && z > 0.5f) {
     Slider2D curr_slider = sliders.get(slider_select);
     curr_slider.setColorBackground(0xff7d3c98);
     slider_select = (slider_select + 1) % 4;
-    if (slider_select < 3){
+    if (slider_select < 3) {
       curr_slider.setColorBackground(0xffb399dd);
     }
     oldZ = 1;
-    
-  }else if(oldZ > 0.5f && z < 0.5f){
+  } else if (oldZ > 0.5f && z < 0.5f) {
     oldZ = 0;
   }
-  
-  if(slider_select != 3){
+
+  if (slider_select != 3) {
     Slider2D curr_slider = sliders.get(slider_select);
     float minX = curr_slider.getMinX();
     float maxX = curr_slider.getMaxX();
-    
+
     float minY = curr_slider.getMinY();
     float maxY = curr_slider.getMaxY();
     curr_slider.setValue(map_interval(x, minX, maxX), maxY-map_interval(y, minY, maxY));
   }
 }
 
-public float map_interval(float n, float min, float max){
+public float map_interval(float n, float min, float max) {
   float mapped_n = ((max - min) * n) + min;
   mapped_n *= 100;
   mapped_n = round(mapped_n);
   mapped_n /= 100;
-  
+
   return mapped_n;
 }
 
-ArrayList<Integer> calculateTriggers(int steps, int pulses, int rotate){
+ArrayList<Integer> calculateTriggers(int steps, int pulses, int rotate) {
   ArrayList<Integer> trigs = new ArrayList<Integer>();
-  
+
   rotate += 1;
   rotate = rotate % steps;
   int bucket = 0;
-  
+
   //fill track with rhythm
-  for(int i=0; i< steps; i++){
+  for (int i=0; i< steps; i++) {
     bucket += pulses;
-    if(bucket >= steps) {
+    if (bucket >= steps) {
       bucket -= steps;
       trigs.add(1);
     } else {
       trigs.add(0);
     }
-   }
+  }
 
   //rotate
-  if(rotate > 0){
+  if (rotate > 0) {
     trigs = rotateSeq(trigs, steps, rotate);
   }
-  
-  
-  return trigs;
 
+
+  return trigs;
 }
 
-ArrayList<Integer> rotateSeq(ArrayList<Integer> seq2, int steps, int rotate){
+ArrayList<Integer> rotateSeq(ArrayList<Integer> seq2, int steps, int rotate) {
   ArrayList<Integer> output = new ArrayList<Integer>();
   int val = steps - rotate;
-  for(int i = 0; i < seq2.size(); i++){
+  for (int i = 0; i < seq2.size(); i++) {
     output.add(seq2.get(abs((i+val) % seq2.size())));
   }
   return output;
 }
 
-void mouseClicked(){
-     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5){
-          println("Tasto 1");
-     }
-     
-     if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5){
-          println("Tasto 2");
-     }
+void mouseClicked() {
+  if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5) {
+    println("Tasto 1");
+  }
+
+  if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5) {
+    println("Tasto 2");
+  }
 }
