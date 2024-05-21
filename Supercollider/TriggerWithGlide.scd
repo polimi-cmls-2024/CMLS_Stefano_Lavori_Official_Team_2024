@@ -1,12 +1,87 @@
-//Runna prima l'opzione, poi lancia il server
-s.options.numWireBufs = 250;
+// ----------- First operation -----------
+(
+s.options.numWireBufs = 150;
 s.boot;
-
-
+)
+// only for emergency
 Server.killAll;
 s.reboot;
 
-//Runna questo dopo il server
+// ----------- Second operation -----------
+// We define the address for SC to listen to
+//When the OSC message arrives we update all the parameters
+(
+~scport = NetAddr("127.0.0.1", 57120);
+
+OSCdef(\fromProcessing, { |msg|
+	~step = floor(msg[1]).asInteger;
+	~trig = floor(msg[2]).asInteger;
+	~rot = asInteger(floor(msg[3]));
+	~op = asInteger(floor(msg[4]));
+	~prob = msg[5];
+	~velocityLoopLength = floor(msg[6]).asInteger;
+	~loopLength = floor(msg[7]).asInteger;
+	~trigPerm = floor(msg[8]).asInteger;
+	~glide = floor(msg[9]*10)/10;
+	~noteLoopLength = floor(msg[10]).asInteger;
+	~notePerm = floor(msg[11]).asInteger;
+	~selectScale = floor(msg[12]).asInteger;
+	~modLoopLength = floor(msg[13]).asInteger;
+	~interpol = msg[14];
+	~pitchGranulator = msg[15];
+	~dryWet = (msg[16] * 2) - 1;
+
+	// Sliders
+	~expVal = msg[17] * 126 + 1;
+	~standardDev = (msg[18] * 39.9) + 0.1;
+
+	~velExpVal = (msg[19] * 0.9) + 0.1;
+	~velStandardDev = (msg[20] * 0.9) + 0.1;
+
+	~modExpVal = msg[21] * 18 + 2;
+	~modStandardDev = (msg[22] * 19.9) + 0.1;
+
+	//buttons
+	//~loop = msg[23];
+	//~velocityLoop = msg[24];
+	//~noteLoopOn = msg[25];
+	//~modulationLoopOn = msg[26];
+
+
+	~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
+	~scale = case(
+		{~selectScale == 1}, {Scale.chromatic},
+		{~selectScale == 2}, {Scale.major},
+		{~selectScale == 3}, {Scale.minor},
+		{~selectScale == 4}, {Scale.majorPentatonic},
+		{~selectScale == 5}, {Scale.minorPentatonic},
+		{~selectScale == 6}, {Scale.dorian},
+		{~selectScale == 7}, {Scale.lydian},
+		{~selectScale == 8}, {Scale.phrygian},
+		{~selectScale == 9}, {Scale.mixolydian},
+		{~selectScale == 10}, {Scale.iwato},
+	);
+
+	~dinamica.value;
+	~ritmo.value;
+	~modulazione.value;
+	~melodia.value;
+	Pdefn(\effect, ~dryWet);
+	Pdefn(\Pgrain, ~pitchGranulator);
+	(floor(msg[9]*10)/10).postln;
+}, '/vars');
+
+
+OSCdef(\globalControls, {|msg|
+	if(msg[1] == 1, {Ndef(\a).resume}, {Ndef(\a).pause});
+	~bpm = msg[2];
+	t.tempo = ~bpm * 4 / 60;
+})
+)
+
+// ----------- Third operation -----------
+
+// IF THERE IS SOME ERROR IN THE POST WINDOW EXCETUCE THIS OPERATION AGAIN! SOMETIMES THERE IS SOME BUG THAT IT DOES NOT START BUT THE PROGRAM WORKS PERFECTLY. IF THE PROGRAM KEEPS WITH PROBLEMS TRY TO KILL THE SERVER AND START AGAIN.
 (
 ~cnt = 0;
 ~step = 1;
@@ -59,30 +134,27 @@ s.reboot;
 ~modulationLoopOn = 0;
 ~modLoopLength = 1;
 
-
-
-
-
+// Amplitude calculation
 ~amp = {
 	arg fundFreq, p_pose = 2;
 	var i = 0;
-	var n = 100;
+	var n = 50;
 	// Amplpitude array creation
 	a = Array.fill(n,{0});
     n.do({
 		a[i] =((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose);
 		i = i+1;
 	});
-	// We normalize the array amplitude so that the sum of all the sinusoids is 1 (we apply a -3dB attenuation)
+	// We normalize the array amplitude so that the sum of all the sinusoids is 1 (we apply a -3dB attenuation to avoid multiple notes playing at the same time and avoid clipping)
     a = a.normalizeSum * 0.5;
 	// return as an array both arrays
 	a;
 };
-
+// Frequency modes calculation
 ~freq = {
 	arg fundFreq, stiffness = 0;
 	var i = 0;
-	var n = 100;
+	var n = 50;
 	// here we just divide by 1000 to have more sensibility on the input number
 	var stiffness_small = stiffness/(1000);
 	// This is a constant detune that will be applied to each frequency mode except the fundamental
@@ -98,7 +170,7 @@ s.reboot;
 	f[0]=fundFreq;
 	f;
 };
-
+// String simulation Synth
 SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.2, dryWet|
 	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
     amp = ~amp.value(midinote.midicps, modulation) * vel;
@@ -172,9 +244,8 @@ Ndef(\a).fadeTime_(0).clock_(t).quant_(4).play;
 ~velocityArray = Array.rand (32, 0.5, 0.9);
 // The actual played note is not the last element of the array
 ~actualNote = ~noteArray[30];
-// Total number of steps of Euclidean rhythm
 
-
+// We define the variables for memorizing the last 32 outputs to allow looping capabilities
 ~modArray = Array.rand(32, 0, 200);
 ~actualMod = ~modArray[30];
 b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
@@ -189,7 +260,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 ~modLoopArray = ~modArray;
 ~modLoopArray = ~modArray.copyRange(0, ~modLoopLength - 1);
 
-
+// Pdefn for generating the rhytmic sequence
 ~ritmo = {Pdefn(\rhythm, Pseq(~pattern, inf, 0).collect({|x|
 	~cnt = ((~cnt + 1) % ~step);
 		case(
@@ -252,7 +323,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 
 );
 };
-
+// Pdefn for generating the velocity sequence
 ))};
 ~dinamica = {Pdefn(\dynamics, Pfunc({if(~velocityLoop == 1,
 		{
@@ -318,7 +389,7 @@ b = Buffer.alloc(s, s.sampleRate * 3, bufnum: 0);
 		}
 	)
 }, inf))};
-
+// Pdefn for generating the modulating sequence, it will be applied on the plucking position of the string
 ~modulazione = {Pdefn(\variations, Pfuncn({
 	if(~modulationLoopOn == 1,
 		{
@@ -398,7 +469,7 @@ Ndef(\a).resume;
 
 
 
-//Ora runna questo per aprire la GUI. Divertiti :)
+// ----------- Not used (we use processing for the GUI, but you can use it if you don't have processing) -----------
 (
 Window("Layout Management", Rect(100, 100, 500, 600)).front
 .layout_(
@@ -570,90 +641,3 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 			),
 ));
  )
-
-
-
-//Parte di OSC... Ci stiamo lavorando
-
-//Funzione che aggiorna in tempo reale i parametri che prende da una stringa
-(
-OSCdef(\fromProcessing, { |msg|
-	~step = floor(msg[1]).asInteger;
-	~trig = floor(msg[2]).asInteger;
-	~rot = asInteger(floor(msg[3]));
-	~op = asInteger(floor(msg[4]));
-	~prob = msg[5];
-	~velocityLoopLength = floor(msg[6]).asInteger;
-	~loopLength = floor(msg[7]).asInteger;
-	~trigPerm = floor(msg[8]).asInteger;
-	~glide = floor(msg[9]*10)/10;
-	~noteLoopLength = floor(msg[10]).asInteger;
-	~notePerm = floor(msg[11]).asInteger;
-	~selectScale = floor(msg[12]).asInteger;
-	~modLoopLength = floor(msg[13]).asInteger;
-	~interpol = msg[14];
-	~pitchGranulator = msg[15];
-	~dryWet = (msg[16] * 2) - 1;
-
-	// Sliders
-	//~standardDev = 2;
-	//~expVal = 75;
-	~expVal = msg[17] * 126 + 1;
-	~standardDev = (msg[18] * 39.9) + 0.1;
-
-	//~velStandardDev = 0;
-	//~velExpVal = 0.8;
-	~velExpVal = (msg[19] * 0.9) + 0.1;
-	~velStandardDev = (msg[20] * 0.9) + 0.1;
-
-	//~modStandardDev = 1;
-	//~modExpVal = 11;
-	~modExpVal = msg[21] * 18 + 2;
-	~modStandardDev = (msg[22] * 19.9) + 0.1;
-
-	//buttons
-	//~loop = msg[23];
-	//~velocityLoop = msg[24];
-	//~noteLoopOn = msg[25];
-	//~modulationLoopOn = msg[26];
-
-
-	~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
-	~scale = case(
-		{~selectScale == 1}, {Scale.chromatic},
-		{~selectScale == 2}, {Scale.major},
-		{~selectScale == 3}, {Scale.minor},
-		{~selectScale == 4}, {Scale.majorPentatonic},
-		{~selectScale == 5}, {Scale.minorPentatonic},
-		{~selectScale == 6}, {Scale.dorian},
-		{~selectScale == 7}, {Scale.lydian},
-		{~selectScale == 8}, {Scale.phrygian},
-		{~selectScale == 9}, {Scale.mixolydian},
-		{~selectScale == 10}, {Scale.iwato},
-	);
-
-	~dinamica.value;
-	~ritmo.value;
-	~modulazione.value;
-	~melodia.value;
-	Pdefn(\effect, ~dryWet);
-	Pdefn(\Pgrain, ~pitchGranulator);
-	(floor(msg[9]*10)/10).postln;
-}, '/vars');
-
-
-OSCdef(\globalControls, {|msg|
-	if(msg[1] == 1, {Ndef(\a).resume}, {Ndef(\a).pause});
-	~bpm = msg[2];
-	t.tempo = ~bpm * 4 / 60;
-})
-)
-
-Pdefn(\Pgrain, 1);
-
-
-
-//Non so se questa linea di codice servirà (ora sì perchè mando osc da sc).
-//Potrebbe essere una cosa da implementare in processing quando si mandano i dati.
-//Crea un net address (ora stiamo usando ip locale e la porta che sc sta ascoltando)
-~scport = NetAddr("127.0.0.1", 57120);
