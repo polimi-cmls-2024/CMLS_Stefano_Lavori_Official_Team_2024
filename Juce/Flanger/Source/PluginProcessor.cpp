@@ -111,7 +111,8 @@ void FlangerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 
     circularBufferWriteHead = 0;
 
-    delayTimeSmooth = 1;
+    delayTimeSmooth_l = 1;
+    delayTimeSmooth_r = 1;
 }
 
 void FlangerAudioProcessor::releaseResources()
@@ -227,24 +228,37 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
         LFO_out *= depth; //scale on depth
 
-        float lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.001f, width); //map in ms
+        lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.001f, width); //map in ms
 
         //calculate delay time
-        delayTimeSmooth = delayTimeSmooth - 0.001 * (delayTimeSmooth - lfoOutMapped);
-        delayTimeSamples = delayTimeSmooth * getSampleRate();
+        delayTimeSmooth_l = delayTimeSmooth_l - 0.001 * (delayTimeSmooth_l - lfoOutMapped);
+        delayTimeSmooth_r = delayTimeSmooth_r - 0.001 * (delayTimeSmooth_r - lfoOutMapped - (0.005 * stereo));
+        delayTimeSamples_l = delayTimeSmooth_l * getSampleRate();
+        delayTimeSamples_r = delayTimeSmooth_r * getSampleRate();
+
+        //overdrive feedback
+        drive_l = std::tanh(std::pow(2,feedback_l));
+        drive_r = std::tanh(std::pow(2, feedback_r));
+
+        feedback_l = (1 - color) * feedback_l + color * drive_l;
+        feedback_r = (1 - color) * feedback_r + color * drive_r;
 
         //add feedbacks
         circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
         circularBufferRight.get()[circularBufferWriteHead] = rightChannel[sample] + feedback_r;
 
-        delayReadHead = circularBufferWriteHead - delayTimeSamples;//index to navigate delay buffer
+        delayReadHead_l = circularBufferWriteHead - delayTimeSamples_l;//index to navigate delay buffer
+        delayReadHead_r = circularBufferWriteHead - delayTimeSamples_r;
 
-        if (delayReadHead < 0) {
-            delayReadHead = circularBufferLength + delayReadHead;
+        if (delayReadHead_l < 0) {
+            delayReadHead_l = circularBufferLength + delayReadHead_l;
+        }
+        if (delayReadHead_r < 0) {
+            delayReadHead_r = circularBufferLength + delayReadHead_r;
         }
 
-        float delay_sample_left = circularBufferLeft.get()[(int)delayReadHead] * buffer.getSample(0, sample);
-        float delay_sample_right = circularBufferRight.get()[(int)delayReadHead] * buffer.getSample(1, sample);
+        float delay_sample_left = std::tanh(circularBufferLeft.get()[(int)delayReadHead_l] + buffer.getSample(0, sample));
+        float delay_sample_right = std::tanh(circularBufferRight.get()[(int)delayReadHead_r] + buffer.getSample(1, sample));
 
         //int readHeadInt_x = (int)delayReadHead;
         //int readHeadInt_x1 = readHeadInt_x + 1;
@@ -256,8 +270,8 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_x], circularBufferLeft.get()[readHeadInt_x1], readHeadRemainderFloat);
         //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_x], circularBufferRight.get()[readHeadInt_x1], readHeadRemainderFloat);
 
-        feedback_l = delay_sample_left * feedback;
-        feedback_r = delay_sample_right * feedback;
+        feedback_l = delay_sample_right * feedback;
+        feedback_r = delay_sample_left * feedback;
 
         /*delay_sample_left += buffer.getSample(0, sample);
         delay_sample_right += buffer.getSample(1, sample);*/
@@ -333,7 +347,7 @@ FlangerAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Feedback", //ID
         "Feedback", //Name
-        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
         0.5f)); //default value
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
@@ -351,13 +365,13 @@ FlangerAudioProcessor::createParameterLayout()
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Color", //ID
         "Color", //Name
-        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        1.f)); //default value
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.f)); //default value
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Stereo", //ID
         "Stereo", //Name
-        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
         1.f)); //default value
 
     return layout;

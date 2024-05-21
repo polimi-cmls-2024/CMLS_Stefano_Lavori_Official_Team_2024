@@ -91,12 +91,18 @@ public:
 private:
     //==============================================================================
     float LFO_phase;
-    float delayTimeSmooth;
-    float delayTimeSamples;
+    float delayTimeSmooth_l;
+    float delayTimeSmooth_r;
+    float delayTimeSamples_l;
+    float delayTimeSamples_r;
     float feedback_l = 0;
     float feedback_r = 0;
-    float delayReadHead;
+    float delayReadHead_l;
+    float delayReadHead_r;
     float LFO_out = 0;
+    float drive_l = 0;
+    float drive_r = 0;
+    float lfoOutMapped;
 
     int circularBufferLength;
     int circularBufferWriteHead;

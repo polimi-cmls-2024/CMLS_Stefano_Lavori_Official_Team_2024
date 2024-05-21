@@ -61,11 +61,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="20" x="0.475" y="0.5914634146341463" useARA="0" uiLastX_Normal="418"
+  <FILTER uid="20" x="0.475" y="0.59026369168357" useARA="0" uiLastX_Normal="418"
           uiLastY_Normal="241" uiopen_Normal="1">
     <PLUGIN name="Flanger" format="VST3" category="Fx" manufacturer="StefanoLavori"
             version="1.0.0" file="C:\Users\Utente\Desktop\Karl\Uni\Poli\CMLS\ProjectCMLS\Juce\Flanger\Builds\VisualStudio2022\x64\Debug\VST3\Flanger.vst3\Contents\x86_64-win\Flanger.vst3"
-            uniqueId="eeaaa521" isInstrument="0" fileTime="18f9175cbb2" infoUpdateTime="18f917f0bb2"
+            uniqueId="eeaaa521" isInstrument="0" fileTime="18f9232bbee" infoUpdateTime="18f9c0d4ff7"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
             uid="e951c6b3"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
