@@ -71,12 +71,41 @@ OSCdef(\fromProcessing, { |msg|
 	(floor(msg[9]*10)/10).postln;
 }, '/vars');
 
+OSCdef(\loop, {|msg|
+	~loop = msg[1];
+	~loopArray = ~randomSeq;
+	~loopArray = ~loopArray.copyRange(0, ~loopLength - 1).permute(~trigPerm);
+	~ritmo.value;
 
-OSCdef(\globalControls, {|msg|
-	if(msg[1] == 1, {Ndef(\a).resume}, {Ndef(\a).pause});
-	~bpm = msg[2];
+	~velocityLoop = msg[2];
+	~velocityLoopArray = ~velocityArray;
+	~velocityLoopArray = ~velocityArray.copyRange(0, ~velocityLoopLength - 1);
+	~dinamica.value;
+
+	~noteLoopOn = msg[3];
+	~noteLoopArray = ~noteArray;
+	~noteLoopArray = ~noteArray.copyRange(0, ~noteLoopLength - 1).permute(~notePerm);
+	~melodia.value;
+
+	~modulationLoopOn = msg[4];
+	~modLoopArray = ~modArray;
+	~modLoopArray = ~modArray.copyRange(0, ~modLoopLength - 1);
+	~modulazione.value;
+
+}, '/loop');
+
+OSCdef(\bpm, {|msg|
+	~bpm = msg[1];
 	t.tempo = ~bpm * 4 / 60;
-})
+}, '/bpm');
+
+OSCdef(\play, {|msg|
+	Ndef(\a).resume;
+}, '/play');
+
+OSCdef(\stop, {|msg|
+	Ndef(\a).pause;
+}, '/stop');
 )
 
 // ----------- Third operation -----------

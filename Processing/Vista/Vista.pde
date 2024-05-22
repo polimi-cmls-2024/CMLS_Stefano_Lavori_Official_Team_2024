@@ -2,7 +2,7 @@ import controlP5.*;
 import oscP5.*;
 import netP5.*;
 OscP5 oscP5;
-NetAddress myRemoteLocation;
+NetAddress myRemoteLocation, myRemoteLocation_dist, myRemoteLocation_flanger;
 
 color[] colors = {color(185, 200, 255), color(255, 179, 186), color(186, 255, 201), color(255, 255, 186)};
 int white = 0xffffffff;
@@ -17,6 +17,7 @@ ArrayList<Integer> triggers = new ArrayList<Integer>();
 
 ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
+ArrayList<Toggle> toggles = new ArrayList<Toggle>(); 
 
 float Name0, Name1, Name2, x, y, z, oldZ, BPM, control_diameter;
 
@@ -64,7 +65,7 @@ float[][] maxVals_2= {{60, 1000, 1},
   {1, 100, 1},
   {1, 1, 0}};
 
-int ticks =1;
+int ticks = 1;
 boolean snap = false;
 
 ControlP5 cp5;
@@ -73,6 +74,8 @@ boolean toggleValue = false;
 void setup() {
   oscP5 = new OscP5(this, 24);
   myRemoteLocation = new NetAddress("127.0.0.1", 57120);
+  myRemoteLocation_dist = new NetAddress("127.0.0.1", 9001);
+  myRemoteLocation_flanger = new NetAddress("127.0.0.1", 9001);
 
   smooth();
   cp5 = new ControlP5(this);
@@ -83,20 +86,7 @@ void setup() {
       switch(theEvent.getAction()) {
       case ControlP5.ACTION_RELEASE_OUTSIDE:
       case ControlP5.ACTION_RELEASE:
-        // message for supercollider
-        OscMessage myMessage = new OscMessage("/vars");
-        for (int i = 0; i < knobs_supercollider.size(); i++) {
-          Knob singleKnob = knobs_supercollider.get(i);
-          float value = singleKnob.getValue();
-          myMessage.add(value);
-        }
-        for (int i = 0; i < sliders.size(); i++) {
-          Slider2D slid = sliders.get(i);
-          float[] values = slid.getArrayValue();
-          myMessage.add(values[0]);
-          myMessage.add(1 - values[1]);
-        }
-        oscP5.send(myMessage, myRemoteLocation);
+        sendOscMessage();
         break;
       }
     }
@@ -107,16 +97,17 @@ void setup() {
   size(1200, 650);
   for (int i = 0; i < colors.length; i++) {
     rectMode(CENTER);
-    //creatoin of top buttons
-    cp5.addToggle(buttonLabels[i])
+    //creation of top buttons
+    Toggle tog = cp5.addToggle(buttonLabels[i])
       .setPosition(width/16 + i*width/8 - 25, 20)
       .setSize(50, 20)
-      .setValue(true)
-      .setMode(ControlP5.SWITCH)
+      .setValue(false)
+      .setMode(ControlP5.DEFAULT)
       .setColorLabel(0)
       .setColorBackground(0xffA0A0A0)
-      .setColorActive(colorsSwitch[i]);
-
+      .setColorActive(colorsSwitch[i])
+      .setColorForeground(0xffBBBBBB);
+    toggles.add(tog);
     //creation of knobs in block_one and block_two
     switch(i) {
     case 0:
@@ -313,15 +304,15 @@ void draw() {
     float dy = radius/2 * sin(angle);
     if (triggers.get(i) == 1) {
       vertex(x_pos + dx, y_pos - dy);
-      stroke(0, 255);
+      stroke(230, 255);
       strokeWeight(10);
     } else {
-      stroke(0, 127);
+      stroke(230, 127);
       strokeWeight(10);
     }
 
     point(x_pos + dx, y_pos - dy);
-    stroke(0, 255);
+    stroke(230, 255);
     strokeWeight(5);
   }
   endShape(CLOSE);
@@ -380,6 +371,7 @@ void oscEvent(OscMessage theOscMessage) {
     float minY = curr_slider.getMinY();
     float maxY = curr_slider.getMaxY();
     curr_slider.setValue(map_interval(x, minX, maxX), maxY-map_interval(y, minY, maxY));
+    sendOscMessage();
   }
 }
 
@@ -431,9 +423,63 @@ ArrayList<Integer> rotateSeq(ArrayList<Integer> seq2, int steps, int rotate) {
 void mouseClicked() {
   if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-100))<37.5) {
     println("Tasto 1");
+    OscMessage myMessage = new OscMessage("/play");
+    oscP5.send(myMessage, myRemoteLocation);
   }
 
   if (sqrt(sq(mouseX - width/2-width/16)+sq(mouseY-250))<37.5) {
     println("Tasto 2");
+    OscMessage myMessage = new OscMessage("/stop");
+    oscP5.send(myMessage, myRemoteLocation);
   }
+}
+
+void sendOscMessage(){
+  // supercollider message
+  OscMessage myMessage = new OscMessage("/vars");
+  for (int i = 0; i < knobs_supercollider.size(); i++) {
+    Knob singleKnob = knobs_supercollider.get(i);
+    float value = singleKnob.getValue();
+    myMessage.add(value);
+  }
+  for (int i = 0; i < sliders.size(); i++) {
+    Slider2D slid = sliders.get(i);
+    float[] values = slid.getArrayValue();
+    myMessage.add(values[0]);
+    myMessage.add(1 - values[1]);
+  }
+  oscP5.send(myMessage, myRemoteLocation);
+  
+  //BPM message
+  OscMessage myMessageBpm = new OscMessage("/bpm");
+  myMessageBpm.add(BPM);
+  oscP5.send(myMessageBpm, myRemoteLocation);
+  
+  //Dist folder message
+  OscMessage myMessageDist = new OscMessage("/distFolderParams");
+  for (int i = 0; i < 3; i++) {
+    Knob singleKnob = knobs_juice.get(i);
+    float value = singleKnob.getValue();
+    myMessageDist.add(value);
+  }
+  oscP5.send(myMessageDist, myRemoteLocation_dist);
+  
+  // Flanger message
+  OscMessage myMessageFlang = new OscMessage("/flangerParams");
+  for (int i = 3; i < knobs_juice.size(); i++) {
+    Knob singleKnob = knobs_juice.get(i);
+    float value = singleKnob.getValue();
+    myMessageFlang.add(value);
+  }
+  oscP5.send(myMessageFlang, myRemoteLocation_flanger);
+  
+  // Toggles message
+  OscMessage myMessageLoop = new OscMessage("/loop");
+  for (int i = 0; i < toggles.size(); i++) {
+    Toggle tog = toggles.get(i);
+    Boolean value = tog.getState();
+    if(value) myMessageLoop.add(1);
+    else myMessageLoop.add(0);
+  }
+  oscP5.send(myMessageLoop, myRemoteLocation);
 }
