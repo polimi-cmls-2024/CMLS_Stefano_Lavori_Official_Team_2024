@@ -11,14 +11,14 @@ int[] colorsSwitch = {0xff0066cc, 0xffcc0000, 0xff00994c, 0xffffdf0b};
 int[] in_rainbows = {0xffa2dce6, 0xffec2327, 0xffedb31e, 0xff45b74a, 0xfff36525, 0xff4686c7, 0xfff7ed4a};
 float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
-
+String[] sliderLabels = {"Pitch Fundamental", "Velocity Bias", "Modulation Bias"};
 int x_pos, y_pos, radius, n, t, rotate, steps_index, triggers_index, value_trig, Euclid_steps;
 ArrayList<Integer> triggers = new ArrayList<Integer>();
 
 ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
 
-float Name0, Name1, Name2, x, y, z, oldZ;
+float Name0, Name1, Name2, x, y, z, oldZ, BPM, control_diameter;
 
 String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
   {"Trig probability", "Velocity loop length", "Trig loop length", "Rhythm permutations"},
@@ -103,6 +103,7 @@ void setup() {
   }
   );
   noStroke();
+  control_diameter=75;
   size(1200, 650);
   for (int i = 0; i < colors.length; i++) {
     rectMode(CENTER);
@@ -215,10 +216,10 @@ void setup() {
       .setLabelVisible(false)
       );
   };
-   //creation of control knob
-   Knob knob = makeKnobs("BPM", 30,300,120, width/2+width/30, height*9/16,white, black, white, 270, true);
-   knob.setRadius(37.5);
-   
+  //creation of control knob
+  Knob knob = makeKnobs("BPM", 30, 300, 120, width/2+width/30, height*9/16, white, black, white, 270, true);
+  knob.setRadius(control_diameter/2);
+
   fill(0xff8e7ab5);
   rect(0, height*5/8, width/2, height);  //slider block
   fill(in_rainbows[4]);
@@ -230,6 +231,21 @@ void setup() {
   textAlign(CENTER);
   text("Folder&Distortion", width*13/16, height/16);
   text("Flanger", width*13/16, height*5/16);
+  fill(245);
+  textSize(15);
+  for (int i=0; i<3; i++) {
+    textAlign(CENTER);
+    smooth();
+    pushMatrix();
+    translate(25+i*width/6, height*7/8);
+    rotate(PI*3/2);
+    text("Scale", 0, 0);
+    popMatrix();
+    
+    textAlign(LEFT);
+    text(sliderLabels[i],width/35+i*width/6, height*19/20);
+  }
+
   smooth();
 
 
@@ -255,11 +271,11 @@ void draw() {
   //creation of play/stop buttons
   fill(in_rainbows[3]);
   stroke(colors[2]);
-  circle(width/2+width/16, 100, 75);
+  circle(width/2+width/16, 100, control_diameter);
   triangle(width/2+width/16 + 20, 100, width/2+width/16 - 20*cos(PI/3), 100 - 20*sin(PI/3), width/2+width/16 - 20*cos(PI/3), 100 + 20*sin(PI/3));
   fill(in_rainbows[1]);
   stroke(colors[1]);
-  circle(width/2+width/16, 250, 75);
+  circle(width/2+width/16, 250, control_diameter);
   rectMode(CENTER);
   square(width/2+width/16, 250, 30);
 
@@ -279,7 +295,8 @@ void draw() {
   textAlign(CENTER);
   text("Play", width/2+width/16, 165);
   text("Stop", width/2+width/16, 315);
-  
+
+
   n = (int)knobs_supercollider.get(0).getValue();
   t = (int)knobs_supercollider.get(1).getValue();
   rotate = (int)knobs_supercollider.get(2).getValue();
