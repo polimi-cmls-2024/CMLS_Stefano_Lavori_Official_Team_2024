@@ -13,11 +13,12 @@ float dimXblock1 = width/2;
 String[] buttonLabels = {"Trig Loop", "Vel Loop", "Notes Loop", "Mod Loop"};
 String[] sliderLabels = {"Pitch Fundamental", "Velocity Bias", "Modulation Bias"};
 int x_pos, y_pos, radius, n, t, rotate, steps_index, triggers_index, value_trig, Euclid_steps;
+int logic_operator, scale, wavetype;
 ArrayList<Integer> triggers = new ArrayList<Integer>();
 
 ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
-ArrayList<Toggle> toggles = new ArrayList<Toggle>(); 
+ArrayList<Toggle> toggles = new ArrayList<Toggle>();
 
 float Name0, Name1, Name2, x, y, z, oldZ, BPM, control_diameter;
 
@@ -53,15 +54,15 @@ float[][] maxVals_1= {{32, 32, 32, 4},
 int slider_select = 0;
 
 float[][] initVals_2 = {{1, 1, 0},
-  {0, 440, 0.6},
+  {1, 440, 0.6},
   {0.9, 0, 0},
   {0, 1, 0}};
 float[][] minVals_2  = {{1, 1, 0},
-  {0, 0.1, 0.1},
+  {1, 0.1, 0.1},
   {0, 0, 0},
   {0, 0, 0}};
 float[][] maxVals_2= {{60, 1000, 1},
-  {3, 20000, 1},
+  {4, 20000, 1},
   {1, 100, 1},
   {1, 1, 0}};
 
@@ -119,7 +120,7 @@ void setup() {
           );
       }
       for (int j = 0; j<3; j++) {
-        ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
+        ticks = (int)maxVals_2[i][j]-(int)minVals_2[i][j];
         if (j == 1) {
           snap = true;
         }
@@ -133,19 +134,20 @@ void setup() {
     case 1:
       for (int j = 0; j<4; j++) {
         ticks = (int)maxVals_1[i][j]-(int)minVals_1[i][j];
-        if (j==1 || j== 2) {
+        if (j !=0 ) {
           snap = true;
-        }
-        if (j == 3) {
-          snap = true;
-        }
+        } else snap = false;
         Knob knob = makeKnobs(names_1[i][j], minVals_1[i][j], maxVals_1[i][j], initVals_1[i][j], width/16 + i*width/8 - 25, 80 + j*80, black, colorsSwitch[i], white, ticks, snap);
         knobs_supercollider.add(
           knob
           );
       }
       for (int j = 0; j<3; j++) {
-        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*3/8, white, in_rainbows[i+1], white, 1, false);
+        ticks = (int)maxVals_2[i][j]-(int)minVals_2[i][j];
+        if (j == 0) {
+          snap = true;
+        } else snap = false;
+        Knob knob = makeKnobs(names_2[i][j], minVals_2[i][j], maxVals_2[i][j], initVals_2[i][j], width*11/16 + j*width/8 - 25, height*3/8, white, in_rainbows[i+1], white, ticks, snap);
         knobs_juice.add(
           knob
           );
@@ -230,11 +232,11 @@ void setup() {
     pushMatrix();
     translate(25+i*width/6, height*7/8);
     rotate(PI*3/2);
-    text("Scale", 0, 0);
+    text("Variance", 0, 0);
     popMatrix();
-    
+
     textAlign(LEFT);
-    text(sliderLabels[i],width/35+i*width/6, height*19/20);
+    text(sliderLabels[i], width/35+i*width/6, height*19/20);
   }
 
   smooth();
@@ -287,7 +289,80 @@ void draw() {
   text("Play", width/2+width/16, 165);
   text("Stop", width/2+width/16, 315);
 
-
+  //handle logic operator label
+  logic_operator = (int)knobs_supercollider.get(3).getValue();
+  noStroke();
+  fill(colors[0]);
+  rect(width/16, 375, 40, 13);
+  switch(logic_operator) {
+  case 1:
+    knobs_supercollider.get(3).setCaptionLabel("OR");
+    break;
+  case 2:
+    knobs_supercollider.get(3).setCaptionLabel("AND");
+    break;
+  case 3:
+    knobs_supercollider.get(3).setCaptionLabel("XOR");
+    break;
+  case 4:
+    knobs_supercollider.get(3).setCaptionLabel("NAND");
+    break;
+  }
+  //handle scale label
+  scale = (int)knobs_supercollider.get(11).getValue();
+  fill(colors[2]);
+  rect(width/16 + width/4, 375, 80, 13);
+  switch(scale) {
+  case 1:
+    knobs_supercollider.get(11).setCaptionLabel("Chromatic \n    Scale");
+    break;
+  case 2:
+    knobs_supercollider.get(11).setCaptionLabel("Major");
+    break;
+  case 3:
+    knobs_supercollider.get(11).setCaptionLabel("Minor");
+    break;
+  case 4:
+    knobs_supercollider.get(11).setCaptionLabel("Major Pentatonic");
+    break;
+  case 5:
+    knobs_supercollider.get(11).setCaptionLabel("Minor Pentatonic");
+    break;
+  case 6:
+    knobs_supercollider.get(11).setCaptionLabel("Dorian");
+    break;
+  case 7:
+    knobs_supercollider.get(11).setCaptionLabel("Lydian");
+    break;
+  case 8:
+    knobs_supercollider.get(11).setCaptionLabel("Phrygian");
+    break;
+  case 9:
+    knobs_supercollider.get(11).setCaptionLabel("Mixolydian");
+    break;
+  case 10:
+    knobs_supercollider.get(11).setCaptionLabel("Iwato");
+    break;
+  }
+  //handle wavetype label
+  wavetype = (int)knobs_juice.get(3).getValue();
+  noStroke();
+  fill(40);
+  rect(width*11/16, 300, 50, 13);
+  switch(wavetype) {
+  case 1:
+    knobs_juice.get(3).setCaptionLabel("SQUARE \n  WAVE");
+    break;
+  case 2:
+    knobs_juice.get(3).setCaptionLabel("TRIANGLE");
+    break;
+  case 3:
+    knobs_juice.get(3).setCaptionLabel("SAWTOOTH");
+    break;
+  case 4:
+    knobs_juice.get(3).setCaptionLabel("SINE");
+    break;
+  }
   n = (int)knobs_supercollider.get(0).getValue();
   t = (int)knobs_supercollider.get(1).getValue();
   rotate = (int)knobs_supercollider.get(2).getValue();
@@ -434,7 +509,7 @@ void mouseClicked() {
   }
 }
 
-void sendOscMessage(){
+void sendOscMessage() {
   // supercollider message
   OscMessage myMessage = new OscMessage("/vars");
   for (int i = 0; i < knobs_supercollider.size(); i++) {
@@ -449,12 +524,12 @@ void sendOscMessage(){
     myMessage.add(1 - values[1]);
   }
   oscP5.send(myMessage, myRemoteLocation);
-  
+
   //BPM message
   OscMessage myMessageBpm = new OscMessage("/bpm");
   myMessageBpm.add(BPM);
   oscP5.send(myMessageBpm, myRemoteLocation);
-  
+
   //Dist folder message
   OscMessage myMessageDist = new OscMessage("/distFolderParams");
   for (int i = 0; i < 3; i++) {
@@ -463,7 +538,7 @@ void sendOscMessage(){
     myMessageDist.add(value);
   }
   oscP5.send(myMessageDist, myRemoteLocation_dist);
-  
+
   // Flanger message
   OscMessage myMessageFlang = new OscMessage("/flangerParams");
   for (int i = 3; i < knobs_juice.size(); i++) {
@@ -472,13 +547,13 @@ void sendOscMessage(){
     myMessageFlang.add(value);
   }
   oscP5.send(myMessageFlang, myRemoteLocation_flanger);
-  
+
   // Toggles message
   OscMessage myMessageLoop = new OscMessage("/loop");
   for (int i = 0; i < toggles.size(); i++) {
     Toggle tog = toggles.get(i);
     Boolean value = tog.getState();
-    if(value) myMessageLoop.add(1);
+    if (value) myMessageLoop.add(1);
     else myMessageLoop.add(0);
   }
   oscP5.send(myMessageLoop, myRemoteLocation);
