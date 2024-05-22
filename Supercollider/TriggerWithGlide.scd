@@ -7,6 +7,9 @@ s.boot;
 Server.killAll;
 s.reboot;
 
+VSTPlugin.search;
+
+
 // ----------- Second operation -----------
 // We define the address for SC to listen to
 //When the OSC message arrives we update all the parameters
@@ -40,13 +43,6 @@ OSCdef(\fromProcessing, { |msg|
 
 	~modExpVal = msg[21] * 18 + 2;
 	~modStandardDev = (msg[22] * 19.9) + 0.1;
-
-	//buttons
-	//~loop = msg[23];
-	//~velocityLoop = msg[24];
-	//~noteLoopOn = msg[25];
-	//~modulationLoopOn = msg[26];
-
 
 	~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
 	~scale = case(
@@ -107,6 +103,63 @@ OSCdef(\stop, {|msg|
 	Ndef(\a).pause;
 }, '/stop');
 )
+
+// plugin stuff
+(
+
+SynthDef(\plugins, {|out|
+	var sound = In.ar(20, 2);
+	//sound = VSTPlugin.ar(sound, 2, id:\dist);
+	sound = VSTPlugin.ar(sound, 2, id:\flanger);
+	ReplaceOut.ar(0, sound);
+}).add;
+
+
+
+~plug = Synth(\plugins, [\out, 0]);
+//~plugDist = VSTPluginController(Synth(\dist, [\in, ~firstBus, \out, 0]),id:\dist);
+
+//PUT THE PATH OF THE PLUGIN
+~plugFlang = VSTPluginController(~plug, \flanger).open("C:/Program Files/Common Files/VST3/DistFolder.vst3", editor:true, verbose:true);
+
+
+//~plugDist.open("C:/Program Files/Common Files/VST3/DistFolder.vst3", editor:true, verbose:true);
+//~plugDist.editor;
+~plugFlang.editor;
+
+
+
+// String simulation Synth
+SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.2, dryWet, bus = 20|
+	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur, out;
+    amp = ~amp.value(midinote.midicps, modulation) * vel;
+    freq = ~freq.value(midinote.midicps, 11);
+	env = EnvGen.kr(Env.perc(0.01, 0.2 + vel, 1, curve:-4), trig, doneAction: 2);
+	// All sine waves summed together
+	x = SinOsc.ar(freq, 0, amp).sum;
+	// We implement the granulator effect
+	ptr = Phasor.ar(0, BufRateScale.ir(0), 0, BufFrames.ir(0));
+	maxgraindur = ptrdelay / rate;
+	BufWr.ar(x * env, buf, ptr);
+	sig = GrainBuf.ar(
+		numChannels: 2,
+		trigger: Dust.kr(16),
+		dur: min(0.3, maxgraindur),
+		sndbuf: buf,
+		rate: rate,
+		pos: (ptr - (ptrdelay  * SampleRate.ir))  / BufFrames.ir(buf),
+		envbufnum: -1,
+		interp: 4,
+		maxGrains: 64
+	);
+	out = Out.ar(bus, XFade2.ar(x * env, sig, dryWet));
+}).add;
+
+)
+
+c = Synth(\modal, ["trig", 1, "midinote", 69, "modulation", 5, "dryWet", 0]);
+c.set(\gate, 0);
+
 
 // ----------- Third operation -----------
 
@@ -199,31 +252,7 @@ OSCdef(\stop, {|msg|
 	f[0]=fundFreq;
 	f;
 };
-// String simulation Synth
-SynthDef(\modal,{ |trig = 1, midinote = 70, modulation , vel = 1, buf = 0, rate = 2, ptrdelay = 0.2, dryWet|
-	var env, amp, freq, p, x, sig, ptr, gran, maxgraindur;
-    amp = ~amp.value(midinote.midicps, modulation) * vel;
-    freq = ~freq.value(midinote.midicps, 11);
-	env = EnvGen.kr(Env.perc(0.01, 0.2 + vel, 1, curve:-4), trig, doneAction: 2);
-	// All sine waves summed together
-	x = SinOsc.ar(freq, 0, amp).sum;
-	// We implement the granulator effect
-	ptr = Phasor.ar(0, BufRateScale.ir(0), 0, BufFrames.ir(0));
-	maxgraindur = ptrdelay / rate;
-	BufWr.ar(x * env, buf, ptr);
-	sig = GrainBuf.ar(
-		numChannels: 2,
-		trigger: Dust.kr(16),
-		dur: min(0.3, maxgraindur),
-		sndbuf: buf,
-		rate: rate,
-		pos: (ptr - (ptrdelay  * SampleRate.ir))  / BufFrames.ir(buf),
-		envbufnum: -1,
-		interp: 4,
-		maxGrains: 64
-	);
-	Out.ar(0, XFade2.ar(x * env, sig, dryWet));
-}).add;
+
 
 
 // Function to create the Euclid sequence
@@ -484,7 +513,8 @@ Ndef(\a, Pbind(
 
 	\modulation, Pdefn(\variations, ~modulazione),
 	\dryWet, Pdefn(\effect, -1),
-	\rate, Pdefn(\Pgrain, 1)
+	\rate, Pdefn(\Pgrain, 1),
+	\bus, 20
 )
 );
 
