@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 
 #define MAX_DELAY_TIME 2
-#define PI 3.14159265358979323846
+
 
 
 //==============================================================================
@@ -64,6 +64,8 @@ public:
 
     float squareWave(float x) {
 
+        x = juce::jmap(x, (float)(-2.0f * PI), (float)(2.0f * PI), -1.0f, 1.0f);
+
         if (x >= -1 && x < 0) {
             x = -1;
         }
@@ -75,13 +77,14 @@ public:
     }
 
     float triangleWave(float x) {
-        x *= 2;
+        x = juce::jmap(x, (float)(-2.0f * PI), (float)(2.0f * PI), -2.0f, 2.0f);
         if (x <= 0) {
-            return (x + 1)/2;
+            x = (x + 1) / 2;
         }
         else {    
-            return (1 - x)/2;
+            x = (1 - x)/ 2;
         }
+        return x;
     }
 
     float linear_interp(float sample_x, float sample_x1, float inPhase) {
@@ -90,6 +93,8 @@ public:
 
 private:
     //==============================================================================
+    float PI = juce::MathConstants<float>::pi;
+
     float LFO_phase;
     float delayTimeSmooth_l;
     float delayTimeSmooth_r;
@@ -108,6 +113,10 @@ private:
     int circularBufferWriteHead;
     std::unique_ptr<float> circularBufferLeft = nullptr;
     std::unique_ptr<float> circularBufferRight = nullptr;
+
+    juce::dsp::ProcessSpec spec;
+
+    juce::dsp::Limiter<float> limiter;
     
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessor)
