@@ -155,16 +155,19 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // Make sure to reset the state if your inner loop is processing
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
+    // interleaved by keeping the same state
+    //  
+    float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
+    float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
+    float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+    
     for (float sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
         {
             float dry_sample = *buffer.getWritePointer(channel, sample);
 
-            float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
-            float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
-            float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+
 
             //if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
             //{
