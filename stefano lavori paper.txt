@@ -6,14 +6,14 @@ It is important to understand the philosophy of our instrument: the process of c
 The extensibility of the application makes it suitable for a wide range of musical contexts, allowing users to explore new frontiers in interactive music composition. By giving the user control over randomness, we have created a system that excels in experimenting with polyrhythms and complex melodies, while also providing the ability to improvise solo or with other musicians.
 
 Additive Synthesis: Simulating String Vibration
-In this application, the string's vibration is simulated by generating an array of frequencies and amplitudes corresponding to the harmonic series of a vibrating string. We begin with the ideal implementation of a string, where each frequency is a multiple of the fundamental frequency of the string. The amplitudes of each frequency are influenced by factors such as the plucking position on the string (p_pose). These amplitudes are calculated using a formula based on the d’alambert equation that simulates the energy distribution of a real vibrating string, resulting in a more realistic sound:
+In this application, the string's vibration is simulated by generating an array of frequencies and amplitudes corresponding to the harmonic series of a vibrating string. We begin with the ideal implementation of a string, where each frequency is a multiple of the fundamental frequency of the string. The amplitudes of each frequency are influenced by factors such as the plucking position on the string (p_pose). These amplitudes are calculated using a formula based on the d’Alambert equation that simulates the energy distribution of a real vibrating string, resulting in a more realistic sound:
 (Formula ampiezze)
 We also considered the condition where the stiffness of the string is relevant. As an effect, each frequency is slightly detuned to simulate the natural imperfections in a real string. The detuning is controlled by a stiffness parameter, which adjusts both a constant detune applied to all harmonic frequencies and a variable part that depends on the harmonic number. This also considers the real theory based on the d’Alambert equation with a fourth derivative component that takes the stiffness into consideration:
 (Formula equazione differenziale con quarto grado)
-As a solution we come up with a new formula for calculating each frequency harmonic:
+As a solution we developed a new formula for calculating each frequency harmonic:
 (Formula frequenze deviate)
 The value of beta that gave us a more realistic sound was 0,011.
-This additive synthesis approach was used because much simpler to implement compared to real implementation of modal synthesis, even though it may increase CPU usage. To reduce the stress of the CPU we can reduce the number of harmonics that our Synth calculates.
+This additive synthesis approach was used because much simpler to implement compared to the real implementation of modal synthesis, even though it may increase CPU usage. To reduce the stress of the CPU we can reduce the number of harmonics that our Synth calculates.
 
 
 Pattern Generation
