@@ -104,22 +104,25 @@ void FlangerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getNumInputChannels();
 
-    LFO_phase = 0;
+    flanger.prepare(spec);
+    flanger.setParameters(getChainSettings(apvts));
 
-    circularBufferLength = sampleRate * MAX_DELAY_TIME;
+    //LFO_phase = 0;
 
-    circularBufferLeft.reset(new float[circularBufferLength]);
-    juce::zeromem(circularBufferLeft.get(), circularBufferLength * sizeof(float));
-    circularBufferRight.reset(new float[circularBufferLength]);
-    juce::zeromem(circularBufferRight.get(), circularBufferLength * sizeof(float));
+    //circularBufferLength = sampleRate * MAX_DELAY_TIME;
 
-    circularBufferWriteHead = 0;
+    //circularBufferLeft.reset(new float[circularBufferLength]);
+    //juce::zeromem(circularBufferLeft.get(), circularBufferLength * sizeof(float));
+    //circularBufferRight.reset(new float[circularBufferLength]);
+    //juce::zeromem(circularBufferRight.get(), circularBufferLength * sizeof(float));
 
-    delayTimeSmooth_l = 1;
-    delayTimeSmooth_r = 1;
+    //circularBufferWriteHead = 0;
 
-    limiter.setThreshold(-6);
-    limiter.prepare(spec);
+    //delayTimeSmooth_l = 1;
+    //delayTimeSmooth_r = 1;
+
+    /*limiter.setThreshold(-6);
+    limiter.prepare(spec);*/
 }
 
 void FlangerAudioProcessor::releaseResources()
@@ -180,133 +183,142 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     //float* rightChannel = buffer.getWritePointer(1);
 
     juce::dsp::AudioBlock<float> block(buffer);
+
+    juce::dsp::ProcessContextReplacing<float> context(block);
+
+
+    flanger.setParameters(getChainSettings(apvts));
+    flanger.process(context);
     
-    auto leftChannel = block.getSingleChannelBlock(0);
-    auto rightChannel = block.getSingleChannelBlock(1);
+    //auto leftChannel = block.getSingleChannelBlock(0);
+    //auto rightChannel = block.getSingleChannelBlock(1);
+
+
 
     //juce::dsp::ProcessContextReplacing<float> leftContext(leftChannel);
 
-    int waveType = apvts.getRawParameterValue("Wave Type")->load();
-    float rate = apvts.getRawParameterValue("Rate")->load();
-    float depth = apvts.getRawParameterValue("Depth")->load();
-    float feedback = apvts.getRawParameterValue("Feedback")->load();
-    float width = apvts.getRawParameterValue("Width")->load();
-    float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
-    float color = apvts.getRawParameterValue("Color")->load();
-    float stereo = apvts.getRawParameterValue("Stereo")->load();
+    //int waveType = apvts.getRawParameterValue("Wave Type")->load();
+    //float rate = apvts.getRawParameterValue("Rate")->load();
+    //float depth = apvts.getRawParameterValue("Depth")->load();
+    //float feedback = apvts.getRawParameterValue("Feedback")->load();
+    //float width = apvts.getRawParameterValue("Width")->load();
+    //float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
+    //float color = apvts.getRawParameterValue("Color")->load();
+    //float stereo = apvts.getRawParameterValue("Stereo")->load();
 
-    if (feedback == 1)
-        feedback = 0.95;
+    //if (feedback == 1)
+    //    feedback = 0.95;
 
-    for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
-    {
+    //for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+    //{
 
-        /*switch (waveType)
-        {
-        case 0:
-            LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
-            break;
-        case 1:
-            LFO_out = squareWave(LFO_phase);
-            break;
-        case 2:
-            LFO_out = triangleWave(LFO_phase);
-            break;
-        case 3:
-            LFO_out = LFO_phase;
-            break;
-        default:
-            break;
-        }*/
-
-
-        //LFO waveform selection
-        if (waveType == 0)
-            //LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
-            LFO_out = std::sin(2 * PI * LFO_phase);
-        else if (waveType == 1)
-            LFO_out = squareWave(2 * PI * LFO_phase);
-        else if (waveType == 2)
-            LFO_out = triangleWave(2 * PI * LFO_phase);
-        else if (waveType == 3)
-            LFO_out = juce::jmap((2.0f * PI * LFO_phase), ( - 2.0f * PI), (2.0f * PI), -1.0f, 1.0f);
+    //    /*switch (waveType)
+    //    {
+    //    case 0:
+    //        LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
+    //        break;
+    //    case 1:
+    //        LFO_out = squareWave(LFO_phase);
+    //        break;
+    //    case 2:
+    //        LFO_out = triangleWave(LFO_phase);
+    //        break;
+    //    case 3:
+    //        LFO_out = LFO_phase;
+    //        break;
+    //    default:
+    //        break;
+    //    }*/
 
 
-        //LFO_out = std::sin(2 * PI * LFO_phase);
+    //    //LFO waveform selection
+    //    if (waveType == 0)
+    //        //LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
+    //        LFO_out = std::sin(2 * PI * LFO_phase);
+    //    else if (waveType == 1)
+    //        LFO_out = squareWave(2 * PI * LFO_phase);
+    //    else if (waveType == 2)
+    //        LFO_out = triangleWave(2 * PI * LFO_phase);
+    //    else if (waveType == 3)
+    //        LFO_out = juce::jmap((2.0f * PI * LFO_phase), ( - 2.0f * PI), (2.0f * PI), -1.0f, 1.0f);
 
-        LFO_phase += rate / getSampleRate(); //update LFO phase
 
-        if (LFO_phase > 1)
-        {
-            LFO_phase = -1;
-        }
+    //    //LFO_out = std::sin(2 * PI * LFO_phase);
 
-        LFO_out *= depth; //scale on depth
+    //    LFO_phase += rate / getSampleRate(); //update LFO phase
 
-        lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.001f, width); //map in ms
+    //    if (LFO_phase > 1)
+    //    {
+    //        LFO_phase = -1;
+    //    }
 
-        //calculate delay time
-        delayTimeSmooth_l = delayTimeSmooth_l - 0.001 * (delayTimeSmooth_l - lfoOutMapped);
-        delayTimeSmooth_r = delayTimeSmooth_r - 0.001 * (delayTimeSmooth_r - lfoOutMapped - (0.005 * stereo));
-        delayTimeSamples_l = delayTimeSmooth_l * getSampleRate();
-        delayTimeSamples_r = delayTimeSmooth_r * getSampleRate();
+    //    LFO_out *= depth; //scale on depth
 
-        //overdrive feedback
-        drive_l = std::tanh(std::pow(2, feedback_l)-1);
-        drive_r = std::tanh(std::pow(2, feedback_r)-1);
+    //    lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.001f, width); //map in ms
 
-        feedback_l = std::tanh((1 - color) * feedback_l + color * drive_l);
-        feedback_r = std::tanh((1 - color) * feedback_r + color * drive_r);
 
-        //add feedbacks
-        //circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
-        //circularBufferRight.get()[circularBufferWriteHead] = rightChannel[sample] + feedback_r;
-        circularBufferLeft.get()[circularBufferWriteHead] = leftChannel.getSample(0,sample) + feedback_l;
-        circularBufferRight.get()[circularBufferWriteHead] = rightChannel.getSample(0,sample) + feedback_r;
+    //    //calculate delay time
+    //    delayTimeSmooth_l = delayTimeSmooth_l - 0.001 * (delayTimeSmooth_l - lfoOutMapped);
+    //    delayTimeSmooth_r = delayTimeSmooth_r - 0.001 * (delayTimeSmooth_r - lfoOutMapped - (0.005 * stereo));
+    //    delayTimeSamples_l = delayTimeSmooth_l * getSampleRate();
+    //    delayTimeSamples_r = delayTimeSmooth_r * getSampleRate();
 
-        delayReadHead_l = circularBufferWriteHead - delayTimeSamples_l;//index to navigate delay buffer
-        delayReadHead_r = circularBufferWriteHead - delayTimeSamples_r;
+    //    //overdrive feedback
+    //    drive_l = std::tanh(std::pow(2, feedback_l)-1);
+    //    drive_r = std::tanh(std::pow(2, feedback_r)-1);
 
-        if (delayReadHead_l < 0) {
-            delayReadHead_l = circularBufferLength + delayReadHead_l;
-        }
-        if (delayReadHead_r < 0) {
-            delayReadHead_r = circularBufferLength + delayReadHead_r;
-        }
+    //    feedback_l = std::tanh((1 - color) * feedback_l + color * drive_l);
+    //    feedback_r = std::tanh((1 - color) * feedback_r + color * drive_r);
 
-        float delay_sample_left = std::tanh(circularBufferLeft.get()[(int)delayReadHead_l] + buffer.getSample(0, sample));
-        float delay_sample_right = std::tanh(circularBufferRight.get()[(int)delayReadHead_r] + buffer.getSample(1, sample));
+    //    //add feedbacks
+    //    //circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
+    //    //circularBufferRight.get()[circularBufferWriteHead] = rightChannel[sample] + feedback_r;
+    //    circularBufferLeft.get()[circularBufferWriteHead] = leftChannel.getSample(0,sample) + feedback_l;
+    //    circularBufferRight.get()[circularBufferWriteHead] = rightChannel.getSample(0,sample) + feedback_r;
 
-        //int readHeadInt_x = (int)delayReadHead;
-        //int readHeadInt_x1 = readHeadInt_x + 1;
-        //float readHeadRemainderFloat = delayReadHead - readHeadInt_x;
-        //if (readHeadInt_x >= circularBufferLength) {
-        //    readHeadInt_x -= circularBufferLength; //Wrapping around circular buffer if we are over the length
-        //}
+    //    delayReadHead_l = circularBufferWriteHead - delayTimeSamples_l;//index to navigate delay buffer
+    //    delayReadHead_r = circularBufferWriteHead - delayTimeSamples_r;
 
-        //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_x], circularBufferLeft.get()[readHeadInt_x1], readHeadRemainderFloat);
-        //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_x], circularBufferRight.get()[readHeadInt_x1], readHeadRemainderFloat);
+    //    if (delayReadHead_l < 0) {
+    //        delayReadHead_l = circularBufferLength + delayReadHead_l;
+    //    }
+    //    if (delayReadHead_r < 0) {
+    //        delayReadHead_r = circularBufferLength + delayReadHead_r;
+    //    }
 
-        feedback_l = delay_sample_right * feedback;
-        feedback_r = delay_sample_left * feedback;
+    //    float delay_sample_left = std::tanh(circularBufferLeft.get()[(int)delayReadHead_l] + buffer.getSample(0, sample));
+    //    float delay_sample_right = std::tanh(circularBufferRight.get()[(int)delayReadHead_r] + buffer.getSample(1, sample));
 
-        //buffer.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
-        //buffer.setSample(1, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+    //    //int readHeadInt_x = (int)delayReadHead;
+    //    //int readHeadInt_x1 = readHeadInt_x + 1;
+    //    //float readHeadRemainderFloat = delayReadHead - readHeadInt_x;
+    //    //if (readHeadInt_x >= circularBufferLength) {
+    //    //    readHeadInt_x -= circularBufferLength; //Wrapping around circular buffer if we are over the length
+    //    //}
 
-        leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
-        rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+    //    //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_x], circularBufferLeft.get()[readHeadInt_x1], readHeadRemainderFloat);
+    //    //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_x], circularBufferRight.get()[readHeadInt_x1], readHeadRemainderFloat);
 
-        circularBufferWriteHead++;
-        if (circularBufferWriteHead >= circularBufferLength) {
-            circularBufferWriteHead = 0;
-        }  
-    }
+    //    feedback_l = delay_sample_right * feedback;
+    //    feedback_r = delay_sample_left * feedback;
 
-    juce::dsp::ProcessContextReplacing<float> leftCtxt(leftChannel);
-    juce::dsp::ProcessContextReplacing<float> rightCtxt(rightChannel);
+    //    //buffer.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
+    //    //buffer.setSample(1, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
 
-    //limiter.process(leftCtxt);
-    //limiter.process(rightCtxt);
+    //    leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
+    //    rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+
+    //    circularBufferWriteHead++;
+    //    if (circularBufferWriteHead >= circularBufferLength) {
+    //        circularBufferWriteHead = 0;
+    //    }  
+    //}
+
+    //juce::dsp::ProcessContextReplacing<float> leftCtxt(leftChannel);
+    //juce::dsp::ProcessContextReplacing<float> rightCtxt(rightChannel);
+
+    ////limiter.process(leftCtxt);
+    ////limiter.process(rightCtxt);
 }
 
 //==============================================================================
@@ -396,6 +408,22 @@ FlangerAudioProcessor::createParameterLayout()
         0.5f)); //default value
 
     return layout;
+}
+
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
+{
+    ChainSettings settings;
+
+    settings.waveType = apvts.getRawParameterValue("Wave Type")->load();
+    settings.rate = apvts.getRawParameterValue("Rate")->load();
+    settings.depth = apvts.getRawParameterValue("Depth")->load();
+    settings.feedback = apvts.getRawParameterValue("Feedback")->load();
+    settings.width = apvts.getRawParameterValue("Width")->load();
+    settings.drywet = apvts.getRawParameterValue("Dry/Wet")->load();
+    settings.color = apvts.getRawParameterValue("Color")->load();
+    settings.stereo = apvts.getRawParameterValue("Stereo")->load();
+
+    return settings;
 }
 
 //==============================================================================
