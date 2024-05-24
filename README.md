@@ -1,4 +1,8 @@
 # ProjectCMLS
+
+"Generative music is like gardening. You plant a seed, and then you watch the seed grow into something unpredictable and interesting."
+-Brian Eno
+
 The proposed application, provides a comprehensive and flexible environment for real-time sound creation and manipulation, offering users a wide range of tools and techniques to explore the possibilities of digital sound synthesis. Based on a hybrid approach that integrates concepts of additive synthesis, digital signal manipulation, and pattern generation, the application allows for a wide range of sonic and musical experiments.
 In terms of sound synthesis, the application predominantly employs additive synthesis, specifically designed to simulate the vibration of a string. This method approach is a simplification of modal synthesis, where complex sound waves are approximated by summing multiple sine waves and involves generating complex sounds by summing multiple sinusoidal signals, each representing a harmonic component of the sound. The SynthDef defines the frequencies and amplitudes of these sinusoids based on a fundamental frequency and user-defined parameters such as stiffness and pose. This allows users to create rich and detailed harmonic spectra, enabling the creation of nuanced and dynamic sounds.
 Once the sound is generated through additive synthesis, the application includes a granular synthesizer for further sound manipulation. This granular synthesizer allows for the creation of complex sounds by combining sinusoidal signals through audio grains extracted from a buffer. The flexibility of the SynthDef allows users to creatively modulate and manipulate sounds through the application of filters, envelopes, and other effects.
