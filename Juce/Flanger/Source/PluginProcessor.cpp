@@ -26,6 +26,12 @@ FlangerAudioProcessor::FlangerAudioProcessor()
         {
             return std::tanh(x);
         };
+
+    params.resize(8);
+
+    //OSC functions
+    connect(9001);
+    juce::OSCReceiver::addListener(this, "/flangerParams");
 }
 
 FlangerAudioProcessor::~FlangerAudioProcessor()
@@ -186,17 +192,27 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     //juce::dsp::ProcessContextReplacing<float> leftContext(leftChannel);
 
-    int waveType = apvts.getRawParameterValue("Wave Type")->load();
-    float rate = apvts.getRawParameterValue("Rate")->load();
-    float depth = apvts.getRawParameterValue("Depth")->load();
-    float feedback = apvts.getRawParameterValue("Feedback")->load();
-    float width = apvts.getRawParameterValue("Width")->load();
-    float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
-    float color = apvts.getRawParameterValue("Color")->load();
-    float stereo = apvts.getRawParameterValue("Stereo")->load();
+    //int waveType = apvts.getRawParameterValue("Wave Type")->load();
+    //float rate = apvts.getRawParameterValue("Rate")->load();
+    //float depth = apvts.getRawParameterValue("Depth")->load();
+    //float feedback = apvts.getRawParameterValue("Feedback")->load();
+    //float width = apvts.getRawParameterValue("Width")->load();
+    //float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
+    //float color = apvts.getRawParameterValue("Color")->load();
+    //float stereo = apvts.getRawParameterValue("Stereo")->load();
+
+    int waveType = (int)params[0];
+    float rate = params[1];
+    float depth = params[2];
+    float feedback = params[3];
+    float width = params[4];
+    float drywet = params[5];
+    float color = params[6];
+    float stereo = params[7];
 
     if (feedback == 1)
         feedback = 0.95;
+    width = juce::jmap(width, 0.f, 100.0f, 0.000f, 0.015f);
 
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
@@ -243,7 +259,7 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
         LFO_out *= depth; //scale on depth
 
-        lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.001f, width); //map in ms
+        lfoOutMapped = juce::jmap(LFO_out, -1.0f, 1.0f, 0.000f, width); //map in ms
 
         //calculate delay time
         delayTimeSmooth_l = delayTimeSmooth_l - 0.001 * (delayTimeSmooth_l - lfoOutMapped);
@@ -312,7 +328,7 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 //==============================================================================
 bool FlangerAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* FlangerAudioProcessor::createEditor()
@@ -335,68 +351,85 @@ void FlangerAudioProcessor::setStateInformation(const void* data, int sizeInByte
     // whose contents will have been created by the getStateInformation() call.
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout
-FlangerAudioProcessor::createParameterLayout()
+void FlangerAudioProcessor::oscMessageReceived(const juce::OSCMessage& message)
 {
-    juce::AudioProcessorValueTreeState::ParameterLayout layout;
-
-    juce::StringArray waveType(
-        "Sine",
-        "Square",
-        "Triangle",
-        "Sawtooth"
-    );
-
-    layout.add(std::make_unique<juce::AudioParameterChoice>(
-        "Wave Type", //ID
-        "Wave Type", //Name
-        waveType,
-        0)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Rate", //ID
-        "Rate", //Name
-        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.15f), //min, max, increment, skew factor
-        0.5f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Depth", //ID
-        "Depth", //Name
-        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        0.7f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Feedback", //ID
-        "Feedback", //Name
-        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        0.5f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Width", //ID
-        "Width", //Name
-        juce::NormalisableRange<float>(0.001f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
-        0.005f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Dry/Wet", //ID
-        "Dry/Wet", //Name
-        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        0.f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Color", //ID
-        "Color", //Name
-        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        0.f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Stereo", //ID
-        "Stereo", //Name
-        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        0.5f)); //default value
-
-    return layout;
+    if (message.size() == 8)
+    {
+        /*       float fold_amt = message[0].getFloat32();
+             std::cout << fold_amt <<std::endl;*/
+        params.set(0, message[0].getFloat32());
+        params.set(1, message[1].getFloat32());
+        params.set(2, message[2].getFloat32());
+        params.set(3, message[3].getFloat32());
+        params.set(4, message[4].getFloat32());
+        params.set(5, message[5].getFloat32());
+        params.set(6, message[6].getFloat32());
+        params.set(7, message[7].getFloat32());
+    }
 }
+
+//juce::AudioProcessorValueTreeState::ParameterLayout
+//FlangerAudioProcessor::createParameterLayout()
+//{
+//    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+//
+//    juce::StringArray waveType(
+//        "Sine",
+//        "Square",
+//        "Triangle",
+//        "Sawtooth"
+//    );
+//
+//    layout.add(std::make_unique<juce::AudioParameterChoice>(
+//        "Wave Type", //ID
+//        "Wave Type", //Name
+//        waveType,
+//        0)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Rate", //ID
+//        "Rate", //Name
+//        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.15f), //min, max, increment, skew factor
+//        0.5f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Depth", //ID
+//        "Depth", //Name
+//        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        0.7f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Feedback", //ID
+//        "Feedback", //Name
+//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        0.5f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Width", //ID
+//        "Width", //Name
+//        juce::NormalisableRange<float>(0.001f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
+//        0.005f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Dry/Wet", //ID
+//        "Dry/Wet", //Name
+//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        0.f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Color", //ID
+//        "Color", //Name
+//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        0.f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Stereo", //ID
+//        "Stereo", //Name
+//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        0.5f)); //default value
+//
+//    return layout;
+//}
 
 //==============================================================================
 // This creates new instances of the plugin..

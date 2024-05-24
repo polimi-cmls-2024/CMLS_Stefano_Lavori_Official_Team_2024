@@ -13,7 +13,9 @@
 //==============================================================================
 /**
 */
-class DistFolderAudioProcessor  : public juce::AudioProcessor
+class DistFolderAudioProcessor  : public juce::AudioProcessor,
+                                  public juce::OSCReceiver, 
+                                  public juce::OSCReceiver::ListenerWithOSCAddress<juce::OSCReceiver::RealtimeCallback>
 {
 public:
     //==============================================================================
@@ -52,9 +54,15 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    //==============================================================================
+    void oscMessageReceived (const juce::OSCMessage& message) override;
 
-    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
+    //==============================================================================
+    //static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    //juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
+
+    juce::Array<float> params;
 
     juce::dsp::WaveShaper<float> waveshaper;
 

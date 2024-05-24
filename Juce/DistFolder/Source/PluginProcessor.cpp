@@ -26,6 +26,12 @@ DistFolderAudioProcessor::DistFolderAudioProcessor()
         {
             return std::tanh(x);
         };
+
+    params.resize(3);
+
+    //OSC functions
+    connect(9001);
+    juce::OSCReceiver::addListener(this, "/distFolderParams");
 }
 
 DistFolderAudioProcessor::~DistFolderAudioProcessor()
@@ -157,9 +163,13 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state
     //  
-    float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
-    float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
-    float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+    //float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
+    //float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
+    //float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+
+    float fold_amount = params[0];
+    float dist_amount = params[1];
+    float dry_wet = params[2];
     
     for (float sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
@@ -205,7 +215,7 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 //==============================================================================
 bool DistFolderAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* DistFolderAudioProcessor::createEditor()
@@ -228,31 +238,45 @@ void DistFolderAudioProcessor::setStateInformation (const void* data, int sizeIn
     // whose contents will have been created by the getStateInformation() call.
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout
-DistFolderAudioProcessor::createParameterLayout()
+void DistFolderAudioProcessor::oscMessageReceived(const juce::OSCMessage& message)
 {
-    juce::AudioProcessorValueTreeState::ParameterLayout layout;
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Folder Amount", //ID
-        "Folder Amount", //Name
-        juce::NormalisableRange<float>(1.f, 60.f, 0.1f, 1.f), //min, max, increment, skew factor
-        1.f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Distortion Amount", //ID
-        "Distortion Amount", //Name
-        juce::NormalisableRange<float>(1.f, 1000.f, 1.f, 1.0f), //min, max, increment, skew factor
-        1.f)); //default value
-
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Dry/Wet", //ID
-        "Dry/Wet", //Name
-        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-        0.f)); //default value
-
-    return layout;
+    if (message.size() == 3)
+    {
+ /*       float fold_amt = message[0].getFloat32();
+      std::cout << fold_amt <<std::endl;*/
+        params.set(0, message[0].getFloat32());
+        params.set(1, message[1].getFloat32());
+        params.set(2, message[2].getFloat32());
+    }
 }
+
+
+
+//juce::AudioProcessorValueTreeState::ParameterLayout
+//DistFolderAudioProcessor::createParameterLayout()
+//{
+//    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Folder Amount", //ID
+//        "Folder Amount", //Name
+//        juce::NormalisableRange<float>(1.f, 60.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        1.f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Distortion Amount", //ID
+//        "Distortion Amount", //Name
+//        juce::NormalisableRange<float>(1.f, 1000.f, 1.f, 1.0f), //min, max, increment, skew factor
+//        1.f)); //default value
+//
+//    layout.add(std::make_unique<juce::AudioParameterFloat>(
+//        "Dry/Wet", //ID
+//        "Dry/Wet", //Name
+//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+//        0.f)); //default value
+//
+//    return layout;
+//}
 
 //==============================================================================
 // This creates new instances of the plugin..

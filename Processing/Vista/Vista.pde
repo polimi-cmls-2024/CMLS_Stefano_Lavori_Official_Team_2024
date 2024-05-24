@@ -351,16 +351,16 @@ void draw() {
   rect(width*11/16, 300, 50, 13);
   switch(wavetype) {
   case 1:
-    knobs_juice.get(3).setCaptionLabel("SQUARE \n  WAVE");
+    knobs_juice.get(3).setCaptionLabel("SINE \n  WAVE");
     break;
   case 2:
-    knobs_juice.get(3).setCaptionLabel("TRIANGLE");
+    knobs_juice.get(3).setCaptionLabel("SQUARE");
     break;
   case 3:
-    knobs_juice.get(3).setCaptionLabel("SAWTOOTH");
+    knobs_juice.get(3).setCaptionLabel("TRIANGLE");
     break;
   case 4:
-    knobs_juice.get(3).setCaptionLabel("SINE");
+    knobs_juice.get(3).setCaptionLabel("SAWTOOTH");
     break;
   }
   n = (int)knobs_supercollider.get(0).getValue();

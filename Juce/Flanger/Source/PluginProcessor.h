@@ -17,7 +17,9 @@
 //==============================================================================
 /**
 */
-class FlangerAudioProcessor  : public juce::AudioProcessor
+class FlangerAudioProcessor  : public juce::AudioProcessor,
+                               public juce::OSCReceiver, 
+                               public juce::OSCReceiver::ListenerWithOSCAddress<juce::OSCReceiver::RealtimeCallback>
 {
 public:
     //==============================================================================
@@ -57,8 +59,8 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
+    /*static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };*/
 
     juce::dsp::WaveShaper<float> waveshaper;
 
@@ -91,6 +93,8 @@ public:
         return (1 - inPhase) * sample_x + inPhase * sample_x1;
     }
 
+    void oscMessageReceived(const juce::OSCMessage& message) override;
+
 private:
     //==============================================================================
     float PI = juce::MathConstants<float>::pi;
@@ -117,6 +121,8 @@ private:
     juce::dsp::ProcessSpec spec;
 
     juce::dsp::Limiter<float> limiter;
+
+    juce::Array<float> params;
     
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessor)
