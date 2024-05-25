@@ -64,12 +64,16 @@ By leveraging Bela's capabilities, the GUI achieves real-time responsiveness to 
 
 JUCE-Based VST3 Plugin
 
+In this project, we developed two VST3 plugins using the JUCE framework to provide advanced audio processing capabilities. These plugins are designed to offer creative tools for sound manipulation, featuring essential audio effects such as distortion, folding, and flanging.
+
+*	distortion and folder
 In the first VST3 plugin developed using the JUCE framework, we've implemented two essential audio effects: distortion and folding. These effects are fundamental in shaping and enhancing audio signals, providing users with creative tools for sound manipulation.
 
 The distortion effect implemented in our plugin introduces harmonic richness and saturation to audio signals. This effect is achieved by non-linearly amplifying the input signal, causing signal clipping and introducing harmonic overtones. By adjusting parameters such as the distortion amount, users can control the intensity of the effect, ranging from subtle warmth to aggressive saturation.
 
 The folding effect, also known as wavefolding, is a unique form of distortion that creates complex waveform shapes by folding parts of the signal that go over a certain threshold back onto itself. This effect adds harmonically rich overtones and creates unique timbral characteristics in audio signals. In our plugin, the folding effect is achieved by dynamically manipulating the amplitude of the audio signal, folding it back upon exceeding predefined thresholds. Users can adjust parameters such as the folding amount to control the intensity of folding, allowing for versatile sound sculpting possibilities.
 
+*	flanger
 In the second plugin, we've implemented the flanger effect to offer users a versatile audio modulation tool for creating dynamic and immersive soundscapes.
 
 The flanger effect is a classic modulation effect characterized by its sweeping, comb-filter-like sound. It works by modulating a delayed version of the input signal and mixing it with the original signal, resulting in a distinct sweeping effect with notches in the frequency spectrum. 
