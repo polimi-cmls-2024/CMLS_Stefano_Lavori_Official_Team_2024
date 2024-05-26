@@ -30,7 +30,7 @@ DistFolderAudioProcessor::DistFolderAudioProcessor()
     params.resize(3);
 
     //OSC functions
-    connect(9001);
+    connect(9000);
     juce::OSCReceiver::addListener(this, "/distFolderParams");
 }
 

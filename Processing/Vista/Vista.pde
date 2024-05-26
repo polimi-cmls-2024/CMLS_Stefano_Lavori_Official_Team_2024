@@ -54,15 +54,15 @@ float[][] maxVals_1= {{32, 32, 32, 4},
 int slider_select = 3;
 
 float[][] initVals_2 = {{1, 1, 0},
-  {1, 5, 0.6},
+  {0, 5, 0.6},
   {0.9, 0, 0},
   {0, 1, 0}};
 float[][] minVals_2  = {{1, 1, 0},
-  {1, 1, 0.1},
+  {0, 1, 0.1},
   {0, 0, 0},
   {0, 0, 0}};
-float[][] maxVals_2= {{60, 1000, 1},
-  {4, 100, 1},
+float[][] maxVals_2= {{60, 200, 1},
+  {3, 100, 1},
   {1, 100, 1},
   {1, 1, 0}};
 
@@ -75,7 +75,7 @@ boolean toggleValue = false;
 void setup() {
   oscP5 = new OscP5(this, 24);
   myRemoteLocation = new NetAddress("127.0.0.1", 57120);
-  myRemoteLocation_dist = new NetAddress("127.0.0.1", 9001);
+  myRemoteLocation_dist = new NetAddress("127.0.0.1", 9000);
   myRemoteLocation_flanger = new NetAddress("127.0.0.1", 9001);
 
   smooth();
@@ -351,16 +351,16 @@ void draw() {
   fill(40);
   rect(width*11/16, 300, 50, 13);
   switch(wavetype) {
-  case 1:
+  case 0:
     knobs_juice.get(3).setCaptionLabel(" SINE\nWAVE");
     break;
-  case 2:
+  case 1:
     knobs_juice.get(3).setCaptionLabel("SQUARE");
     break;
-  case 3:
+  case 2:
     knobs_juice.get(3).setCaptionLabel("TRIANGLE");
     break;
-  case 4:
+  case 3:
     knobs_juice.get(3).setCaptionLabel("SAWTOOTH");
     break;
   }
