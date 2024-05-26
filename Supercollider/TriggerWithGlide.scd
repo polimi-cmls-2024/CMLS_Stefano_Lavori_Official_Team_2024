@@ -7,7 +7,7 @@ s.boot;
 Server.killAll;
 s.reboot;
 
-VSTPlugin.search;
+VSTPlugin.search(s,"C:/Program Files/Common Files/VST3", options:(exclude: ["C:/Program Files/Common Files/VST3/Kairatune.vst3"]));
 
 
 // ----------- Second operation (2/4) -----------
@@ -105,7 +105,6 @@ OSCdef(\stop, {|msg|
 )
 
 // ----------- Third operation (3/4) -----------
-
 // IF THERE IS SOME ERROR IN THE POST WINDOW EXCETUCE THIS OPERATION AGAIN! SOMETIMES THERE IS SOME BUG THAT IT DOES NOT START BUT THE PROGRAM WORKS PERFECTLY. IF THE PROGRAM KEEPS WITH PROBLEMS TRY TO KILL THE SERVER AND START AGAIN.
 (
 ~cnt = 0;
@@ -500,8 +499,8 @@ Ndef(\prova, \vst -> {
 
 });
 ~fx = VSTPluginNodeProxyController.collect(Ndef(\prova));
-~fx.flanger.open("C:/Program Files/Common Files/VST3/Flanger.vst3", editor:true, verbose:true);
-~fx.dist.open("C:/Program Files/Common Files/VST3/DistFolder.vst3", editor:true, verbose:true);
+~fx.flanger.open("C:/Program Files/Common Files/VST3/Flanger.vst3", editor:false, verbose:true);
+~fx.dist.open("C:/Program Files/Common Files/VST3/DistFolder.vst3", editor:false, verbose:true);
 
 )
 // To open the editors
@@ -681,3 +680,4 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 			),
 ));
  )
+s.scope
