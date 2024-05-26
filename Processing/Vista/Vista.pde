@@ -352,7 +352,7 @@ void draw() {
   rect(width*11/16, 300, 50, 13);
   switch(wavetype) {
   case 1:
-    knobs_juice.get(3).setCaptionLabel("SINE \n  WAVE");
+    knobs_juice.get(3).setCaptionLabel("  SINE\nWAVE");
     break;
   case 2:
     knobs_juice.get(3).setCaptionLabel("SQUARE");
