@@ -64,7 +64,7 @@ public:
 
     float squareWave(float x) {
 
-        x = juce::jmap(x, (float)(-2.0f * PI), (float)(2.0f * PI), -1.0f, 1.0f);
+        //x = juce::jmap(x, (float)(-4.0f * PI), (float)(4.0f * PI), -1.0f, 1.0f);
 
         if (x >= -1 && x < 0) {
             x = -1;
@@ -77,7 +77,9 @@ public:
     }
 
     float triangleWave(float x) {
-        x = juce::jmap(x, (float)(-2.0f * PI), (float)(2.0f * PI), -2.0f, 2.0f);
+        /*x = juce::jmap(x, (float)(-4.0f * PI), (float)(4.0f * PI), -2.0f, 2.0f);*/
+        x *= 2;
+
         if (x <= 0.f) {
             x = (x + 1.f) / 2.f;
         }

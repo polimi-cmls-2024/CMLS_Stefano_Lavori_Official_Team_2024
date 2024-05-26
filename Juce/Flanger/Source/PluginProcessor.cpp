@@ -218,6 +218,9 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     if (feedback == 1)
         feedback = 0.95;
+
+    if (waveType != 0)
+        rate *= 2;
     
 
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
@@ -240,18 +243,20 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         default:
             break;
         }*/
-
+        
 
         //LFO waveform selection
         if (waveType == 0)
             //LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
             LFO_out = std::sin(2 * PI * LFO_phase);
         else if (waveType == 1)
-            LFO_out = squareWave(2 * PI * LFO_phase);
+            LFO_out = squareWave(LFO_phase);
         else if (waveType == 2)
-            LFO_out = triangleWave(2 * PI * LFO_phase);
+            LFO_out = triangleWave(LFO_phase);
         else if (waveType == 3)
-            LFO_out = juce::jmap((2.0f * PI * LFO_phase), (-2.0f * PI), (2.0f * PI), -1.0f, 1.0f);
+            LFO_out = LFO_phase;
+
+
 
 
         //LFO_out = std::sin(2 * PI * LFO_phase);
@@ -325,8 +330,7 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_xl], circularBufferLeft.get()[(readHeadInt_xl + 1)], readHeadRemainderFloat_l);
         //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_xr], circularBufferRight.get()[(readHeadInt_xr + 1)], readHeadRemainderFloat_r);
 
-        l_smoother.setTargetValue(delay_sample_left);
-        r_smoother.setTargetValue(delay_sample_right);
+        
 
         feedback_l = delay_sample_left * feedback;
         feedback_r = delay_sample_right * feedback;
@@ -337,12 +341,15 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
         feedback_l = (1 - color) * feedback_l + color * drive_l;
         feedback_r = (1 - color) * feedback_r + color * drive_r;
+        
+        l_smoother.setTargetValue(buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
+        r_smoother.setTargetValue(buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
 
-        //leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
-        //rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+        //leftChannel.setSample(0, sample, );
+        //rightChannel.setSample(0, sample, );
 
-        leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + l_smoother.getNextValue() * (drywet));
-        rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + r_smoother.getNextValue() * (drywet));
+        leftChannel.setSample(0, sample, l_smoother.getNextValue());
+        rightChannel.setSample(0, sample, r_smoother.getNextValue());
 
         //leftChannel.setSample(0, sample, delay_sample_left);
         //rightChannel.setSample(0, sample, delay_sample_right);
