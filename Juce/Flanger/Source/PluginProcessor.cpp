@@ -22,11 +22,6 @@ FlangerAudioProcessor::FlangerAudioProcessor()
     )
 #endif
 {
-    waveshaper.functionToUse = [](float x) //init waveshaper function
-        {
-            return std::tanh(x);
-        };
-
     params.resize(8);
 
     //OSC functions
@@ -124,6 +119,9 @@ void FlangerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     delayTimeSmooth_l = 1;
     delayTimeSmooth_r = 1;
 
+    l_smoother.reset(1);
+    r_smoother.reset(1);
+
     limiter.setThreshold(-6);
     limiter.prepare(spec);
 }
@@ -190,29 +188,37 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     auto leftChannel = block.getSingleChannelBlock(0);
     auto rightChannel = block.getSingleChannelBlock(1);
 
+
     //juce::dsp::ProcessContextReplacing<float> leftContext(leftChannel);
 
-    //int waveType = apvts.getRawParameterValue("Wave Type")->load();
-    //float rate = apvts.getRawParameterValue("Rate")->load();
-    //float depth = apvts.getRawParameterValue("Depth")->load();
-    //float feedback = apvts.getRawParameterValue("Feedback")->load();
-    //float width = apvts.getRawParameterValue("Width")->load();
-    //float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
-    //float color = apvts.getRawParameterValue("Color")->load();
-    //float stereo = apvts.getRawParameterValue("Stereo")->load();
+    int waveType = apvts.getRawParameterValue("Wave Type")->load();
+    float rate = apvts.getRawParameterValue("Rate")->load();
+    float depth = apvts.getRawParameterValue("Depth")->load();
+    float feedback = apvts.getRawParameterValue("Feedback")->load();
+    float width = apvts.getRawParameterValue("Width")->load();
+    float drywet = apvts.getRawParameterValue("Dry/Wet")->load();
+    float color = apvts.getRawParameterValue("Color")->load();
+    float stereo = apvts.getRawParameterValue("Stereo")->load();
 
-    int waveType = (int)params[0];
-    float rate = params[1];
-    float depth = params[2];
-    float feedback = params[3];
-    float width = params[4];
-    float drywet = params[5];
-    float color = params[6];
-    float stereo = params[7];
+    if(oscNew)
+    {
+        waveType = (int)params[0];
+        rate = params[1];
+        depth = params[2];
+        feedback = params[3];
+        width = params[4];
+        drywet = params[5];
+        color = params[6];
+        stereo = params[7];
+    
+        rate = juce::mapToLog10(rate / 100, 0.1f, 20000.0f);
+        width = juce::jmap(width, 0.0f, 100.0f, 0.001f, 0.015f);
+    }
+
 
     if (feedback == 1)
         feedback = 0.95;
-    width = juce::jmap(width, 0.f, 100.0f, 0.000f, 0.015f);
+    
 
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
@@ -245,16 +251,16 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         else if (waveType == 2)
             LFO_out = triangleWave(2 * PI * LFO_phase);
         else if (waveType == 3)
-            LFO_out = juce::jmap((2.0f * PI * LFO_phase), ( - 2.0f * PI), (2.0f * PI), -1.0f, 1.0f);
+            LFO_out = juce::jmap((2.0f * PI * LFO_phase), (-2.0f * PI), (2.0f * PI), -1.0f, 1.0f);
 
 
         //LFO_out = std::sin(2 * PI * LFO_phase);
 
         LFO_phase += rate / getSampleRate(); //update LFO phase
 
-        if (LFO_phase > 1)
+        if (LFO_phase > 1.0f)
         {
-            LFO_phase = -1;
+            LFO_phase = -1.0f;
         }
 
         LFO_out *= depth; //scale on depth
@@ -267,12 +273,10 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         delayTimeSamples_l = delayTimeSmooth_l * getSampleRate();
         delayTimeSamples_r = delayTimeSmooth_r * getSampleRate();
 
-        //overdrive feedback
-        drive_l = std::tanh(std::pow(2, feedback_l)-1);
-        drive_r = std::tanh(std::pow(2, feedback_r)-1);
 
-        feedback_l = std::tanh((1 - color) * feedback_l + color * drive_l);
-        feedback_r = std::tanh((1 - color) * feedback_r + color * drive_r);
+
+        //feedback_l = (1 - color) * feedback_l + color * drive_l;
+        //feedback_r = (1 - color) * feedback_r + color * drive_r;
 
         //add feedbacks
         //circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
@@ -290,27 +294,58 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             delayReadHead_r = circularBufferLength + delayReadHead_r;
         }
 
+        
         float delay_sample_left = std::tanh(circularBufferLeft.get()[(int)delayReadHead_l] + buffer.getSample(0, sample));
         float delay_sample_right = std::tanh(circularBufferRight.get()[(int)delayReadHead_r] + buffer.getSample(1, sample));
 
-        //int readHeadInt_x = (int)delayReadHead;
-        //int readHeadInt_x1 = readHeadInt_x + 1;
-        //float readHeadRemainderFloat = delayReadHead - readHeadInt_x;
-        //if (readHeadInt_x >= circularBufferLength) {
-        //    readHeadInt_x -= circularBufferLength; //Wrapping around circular buffer if we are over the length
+        //std::unique_ptr<float> delay_sample_left = nullptr; 
+        //float delay_sample_right;
+
+        //std::unique_ptr<float> tmp = nullptr;
+        //tmp.get()[0] = circularBufferLeft.get()[(int)delayReadHead_l];
+        //tmp.get()[1] = circularBufferLeft.get()[(int)delayReadHead_l];
+        //
+        //linearInterpolator.process((double)2, *tmp, *delay_sample_left, 1, (int)circularBufferLength, (int)circularBufferLength);
+        
+        //int readHeadInt_xl = (int)delayReadHead_l;
+        //int readHeadInt_xr = (int)delayReadHead_r;
+        //float readHeadRemainderFloat_l = delayReadHead_l - readHeadInt_xl;
+        //float readHeadRemainderFloat_r = delayReadHead_r - readHeadInt_xr;
+        //
+        ////Wrapping around circular buffer if we are over the length
+        //if (readHeadInt_xl >= circularBufferLength) {
+        //    readHeadInt_xl -= circularBufferLength; 
+        //}
+        //if (readHeadInt_xr >= circularBufferLength) {
+        //    readHeadInt_xr -= circularBufferLength; 
         //}
 
-        //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_x], circularBufferLeft.get()[readHeadInt_x1], readHeadRemainderFloat);
-        //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_x], circularBufferRight.get()[readHeadInt_x1], readHeadRemainderFloat);
+        ////float tmp = circularBufferLeft.get()[(readHeadInt_xl + 1)];
+        //
+        //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_xl], circularBufferLeft.get()[(readHeadInt_xl + 1)], readHeadRemainderFloat_l);
+        //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_xr], circularBufferRight.get()[(readHeadInt_xr + 1)], readHeadRemainderFloat_r);
 
-        feedback_l = delay_sample_right * feedback;
-        feedback_r = delay_sample_left * feedback;
+        l_smoother.setTargetValue(delay_sample_left);
+        r_smoother.setTargetValue(delay_sample_right);
 
-        //buffer.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
-        //buffer.setSample(1, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+        feedback_l = delay_sample_left * feedback;
+        feedback_r = delay_sample_right * feedback;
+        
+        //overdrive feedback
+        drive_l = std::pow(2, feedback_l) - 1;
+        drive_r = std::pow(2, feedback_r) - 1;
 
-        leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
-        rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+        feedback_l = (1 - color) * feedback_l + color * drive_l;
+        feedback_r = (1 - color) * feedback_r + color * drive_r;
+
+        //leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
+        //rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
+
+        leftChannel.setSample(0, sample, buffer.getSample(0, sample) * (1 - (drywet)) + l_smoother.getNextValue() * (drywet));
+        rightChannel.setSample(0, sample, buffer.getSample(1, sample) * (1 - (drywet)) + r_smoother.getNextValue() * (drywet));
+
+        //leftChannel.setSample(0, sample, delay_sample_left);
+        //rightChannel.setSample(0, sample, delay_sample_right);
 
         circularBufferWriteHead++;
         if (circularBufferWriteHead >= circularBufferLength) {
@@ -318,8 +353,8 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         }  
     }
 
-    juce::dsp::ProcessContextReplacing<float> leftCtxt(leftChannel);
-    juce::dsp::ProcessContextReplacing<float> rightCtxt(rightChannel);
+    //juce::dsp::ProcessContextReplacing<float> leftCtxt(leftChannel);
+    //juce::dsp::ProcessContextReplacing<float> rightCtxt(rightChannel);
 
     //limiter.process(leftCtxt);
     //limiter.process(rightCtxt);
@@ -328,7 +363,7 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 //==============================================================================
 bool FlangerAudioProcessor::hasEditor() const
 {
-    return false; // (change this to false if you choose to not supply an editor)
+    return true; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* FlangerAudioProcessor::createEditor()
@@ -355,8 +390,6 @@ void FlangerAudioProcessor::oscMessageReceived(const juce::OSCMessage& message)
 {
     if (message.size() == 8)
     {
-        /*       float fold_amt = message[0].getFloat32();
-             std::cout << fold_amt <<std::endl;*/
         params.set(0, message[0].getFloat32());
         params.set(1, message[1].getFloat32());
         params.set(2, message[2].getFloat32());
@@ -365,71 +398,73 @@ void FlangerAudioProcessor::oscMessageReceived(const juce::OSCMessage& message)
         params.set(5, message[5].getFloat32());
         params.set(6, message[6].getFloat32());
         params.set(7, message[7].getFloat32());
-    }
+
+        oscNew = true;
+    }   
 }
 
-//juce::AudioProcessorValueTreeState::ParameterLayout
-//FlangerAudioProcessor::createParameterLayout()
-//{
-//    juce::AudioProcessorValueTreeState::ParameterLayout layout;
-//
-//    juce::StringArray waveType(
-//        "Sine",
-//        "Square",
-//        "Triangle",
-//        "Sawtooth"
-//    );
-//
-//    layout.add(std::make_unique<juce::AudioParameterChoice>(
-//        "Wave Type", //ID
-//        "Wave Type", //Name
-//        waveType,
-//        0)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Rate", //ID
-//        "Rate", //Name
-//        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.15f), //min, max, increment, skew factor
-//        0.5f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Depth", //ID
-//        "Depth", //Name
-//        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        0.7f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Feedback", //ID
-//        "Feedback", //Name
-//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        0.5f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Width", //ID
-//        "Width", //Name
-//        juce::NormalisableRange<float>(0.001f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
-//        0.005f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Dry/Wet", //ID
-//        "Dry/Wet", //Name
-//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        0.f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Color", //ID
-//        "Color", //Name
-//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        0.f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Stereo", //ID
-//        "Stereo", //Name
-//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        0.5f)); //default value
-//
-//    return layout;
-//}
+juce::AudioProcessorValueTreeState::ParameterLayout
+FlangerAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    juce::StringArray waveType(
+        "Sine",
+        "Square",
+        "Triangle",
+        "Sawtooth"
+    );
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        "Wave Type", //ID
+        "Wave Type", //Name
+        waveType,
+        0)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Rate", //ID
+        "Rate", //Name
+        juce::NormalisableRange<float>(0.1f, 20000.f, 0.1f, 0.15f), //min, max, increment, skew factor
+        0.5f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Depth", //ID
+        "Depth", //Name
+        juce::NormalisableRange<float>(0.1f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.7f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Feedback", //ID
+        "Feedback", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.5f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Width", //ID
+        "Width", //Name
+        juce::NormalisableRange<float>(0.001f, 0.015f, 0.001f, 1.f), //min, max, increment, skew factor
+        0.005f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Dry/Wet", //ID
+        "Dry/Wet", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Color", //ID
+        "Color", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Stereo", //ID
+        "Stereo", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        1.0f)); //default value
+
+    return layout;
+}
 
 //==============================================================================
 // This creates new instances of the plugin..

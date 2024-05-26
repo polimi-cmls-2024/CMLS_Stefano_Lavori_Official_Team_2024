@@ -59,10 +59,8 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-    /*static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };*/
-
-    juce::dsp::WaveShaper<float> waveshaper;
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
     float squareWave(float x) {
 
@@ -80,11 +78,11 @@ public:
 
     float triangleWave(float x) {
         x = juce::jmap(x, (float)(-2.0f * PI), (float)(2.0f * PI), -2.0f, 2.0f);
-        if (x <= 0) {
-            x = (x + 1) / 2;
+        if (x <= 0.f) {
+            x = (x + 1.f) / 2.f;
         }
         else {    
-            x = (1 - x)/ 2;
+            x = (1.0f - x)/ 2.f;
         }
         return x;
     }
@@ -115,15 +113,20 @@ private:
 
     int circularBufferLength;
     int circularBufferWriteHead;
+
     std::unique_ptr<float> circularBufferLeft = nullptr;
     std::unique_ptr<float> circularBufferRight = nullptr;
+
+    bool oscNew = false;
 
     juce::dsp::ProcessSpec spec;
 
     juce::dsp::Limiter<float> limiter;
 
     juce::Array<float> params;
-    
 
+    juce::LinearSmoothedValue<float> l_smoother;
+    juce::LinearSmoothedValue<float> r_smoother;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FlangerAudioProcessor)
 };
