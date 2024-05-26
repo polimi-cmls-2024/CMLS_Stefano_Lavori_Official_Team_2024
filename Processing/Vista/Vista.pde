@@ -20,7 +20,7 @@ ArrayList<Knob> knobs_supercollider = new ArrayList<Knob>();
 ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
 ArrayList<Toggle> toggles = new ArrayList<Toggle>();
 
-float Name0, Name1, Name2, x, y, z, oldZ, BPM, control_diameter;
+float Name0, Name1, Name2, x, y, z, digital, oldZ, oldDigital, BPM, control_diameter;
 
 String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
   {"Trig probability", "Velocity loop length", "Trig loop length", "Rhythm permutations"},
@@ -51,18 +51,18 @@ float[][] maxVals_1= {{32, 32, 32, 4},
   {32, 1, 2, 1}};
 
 
-int slider_select = 0;
+int slider_select = 3;
 
 float[][] initVals_2 = {{1, 1, 0},
-  {1, 440, 0.6},
+  {1, 5, 0.6},
   {0.9, 0, 0},
   {0, 1, 0}};
 float[][] minVals_2  = {{1, 1, 0},
-  {1, 0.1, 0.1},
+  {1, 1, 0.1},
   {0, 0, 0},
   {0, 0, 0}};
 float[][] maxVals_2= {{60, 1000, 1},
-  {4, 20000, 1},
+  {4, 100, 1},
   {1, 100, 1},
   {1, 1, 0}};
 
@@ -243,6 +243,7 @@ void setup() {
 
 
   oldZ = 0;
+  oldDigital = 0;
 
   x_pos = width/2 + width/16;
   y_pos = height - 100;
@@ -424,18 +425,36 @@ void oscEvent(OscMessage theOscMessage) {
   x = theOscMessage.get(0).floatValue();
   y = theOscMessage.get(1).floatValue();
   z = theOscMessage.get(2).floatValue();
+  
+  digital = theOscMessage.get(3).floatValue();
   // we check if there is a transition from 0 to 1 (release part of the pressing stage)
   // of the z value of the joystick so we can detect when the button is pressed
   if (oldZ < 0.5f && z > 0.5f) {
-    Slider2D curr_slider = sliders.get(slider_select);
-    curr_slider.setColorBackground(0xff7d3c98);
     slider_select = (slider_select + 1) % 4;
+    Slider2D curr_slider;
+    if (slider_select != 0){
+      curr_slider = sliders.get(slider_select - 1);
+      curr_slider.setColorBackground(0xff7d3c98);
+    }
     if (slider_select < 3) {
+      curr_slider = sliders.get(slider_select);
       curr_slider.setColorBackground(0xffb399dd);
     }
     oldZ = 1;
   } else if (oldZ > 0.5f && z < 0.5f) {
     oldZ = 0;
+  }
+  
+  if (oldDigital < 0.5f && digital > 0.5f) {
+    Knob digital_knob = knobs_juice.get(10);
+    digital_knob.setValue(1);
+    oldDigital = 1;
+    sendOscMessage();
+  } else if (oldDigital > 0.5f && digital < 0.5f) {
+    Knob digital_knob = knobs_juice.get(10);
+    digital_knob.setValue(0);
+    oldDigital = 0;
+    sendOscMessage();
   }
 
   if (slider_select != 3) {

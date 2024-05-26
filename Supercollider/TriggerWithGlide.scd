@@ -529,7 +529,7 @@ Window("Layout Management", Rect(100, 100, 500, 600)).front
 				Knob().action_({ |knb| ~step = (knb.value * 31) + 1;
 					~step = ~step.asInteger;
 					a.string = "Euclid Steps: " ++ ~step.asString;
-					~pattern = ~euclid.value(~step, ~trig, ~rot) + ~cnt;
+					~pattern = ~euclid.value(~step, ~trig, ~rot + ~cnt);
 					~ritmo.value;
 
 				}),
