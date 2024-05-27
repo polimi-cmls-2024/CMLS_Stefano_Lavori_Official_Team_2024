@@ -21,7 +21,7 @@ ArrayList<Knob> knobs_juice = new ArrayList<Knob>();
 ArrayList<Toggle> toggles = new ArrayList<Toggle>();
 
 float Name0, Name1, Name2, x, y, z, digital, oldZ, oldDigital, BPM, control_diameter;
-
+// Defining knob names for supercollider part and flanger distortion part
 String[][] names_1= {{"Euclid steps", "Euclid triggers", "Euclid rotation", "Logic operator"},
   {"Trig probability", "Velocity loop length", "Trig loop length", "Rhythm permutations"},
   {"Glide", "Notes loop length", "Notes permutation", "Scale"},
@@ -35,8 +35,7 @@ String[][] names_2 = {{"Fold Amount", "Dist Amount", "F&D Dry/Wet"},
 };
 
 ArrayList<Slider2D> sliders = new ArrayList<Slider2D>();
-
-
+// Defining the value of the knobs (initial value, minimum value, maximum value)
 float[][] initVals_1 = {{1, 1, 0, 1},
   {0, 1, 1, 0},
   {0, 1, 5, 1},
@@ -49,9 +48,6 @@ float[][] maxVals_1= {{32, 32, 32, 4},
   {1, 32, 32, 20},
   {1, 32, 20, 10},
   {32, 1, 2, 1}};
-
-
-int slider_select = 3;
 
 float[][] initVals_2 = {{1, 1, 0},
   {0, 5, 0.6},
@@ -66,6 +62,7 @@ float[][] maxVals_2= {{60, 200, 1},
   {1, 100, 1},
   {1, 1, 0}};
 
+int slider_select = 3;
 int ticks = 1;
 boolean snap = false;
 
@@ -74,11 +71,13 @@ boolean toggleValue = false;
 
 void setup() {
   oscP5 = new OscP5(this, 24);
+  // Setting the remote locations for OSC messages location
   myRemoteLocation = new NetAddress("127.0.0.1", 57120);
   myRemoteLocation_dist = new NetAddress("127.0.0.1", 9000);
   myRemoteLocation_flanger = new NetAddress("127.0.0.1", 9001);
 
   smooth();
+  // For the update of the knob we want to send an OSC message with the new parameters
   cp5 = new ControlP5(this);
   cp5.addCallback(
     new CallbackListener() {
@@ -209,10 +208,11 @@ void setup() {
       .setLabelVisible(false)
       );
   };
-  //creation of control knob
+  //creation of control knob BPM
   Knob knob = makeKnobs("BPM", 30, 300, 120, width/2+width/30, height*9/16, white, black, white, 270, true);
   knob.setRadius(control_diameter/2);
 
+  //Drawing the different blocks and adding text
   fill(0xff8e7ab5);
   rect(0, height*5/8, width/2, height);  //slider block
   fill(in_rainbows[4]);
@@ -244,7 +244,6 @@ void setup() {
 
   oldZ = 0;
   oldDigital = 0;
-
   x_pos = width/2 + width/16;
   y_pos = height - 100;
   radius = 100;

@@ -1,6 +1,6 @@
 // ----------- First operation (1/4) -----------
 (
-s.options.numWireBufs = 150;
+s.options.numWireBufs = 50;
 s.boot;
 )
 // only for emergency
@@ -9,6 +9,7 @@ s.reboot;
 
 VSTPlugin.search(s,"C:/Program Files/Common Files/VST3");
 //, options:(exclude: ["C:/Program Files/Common Files/VST3/Kairatune.vst3"]));
+
 
 
 // ----------- Second operation (2/4) -----------
@@ -106,7 +107,7 @@ OSCdef(\stop, {|msg|
 )
 
 // ----------- Third operation (3/4) -----------
-// IF THERE IS SOME ERROR IN THE POST WINDOW EXCETUCE THIS OPERATION AGAIN! SOMETIMES THERE IS SOME BUG THAT IT DOES NOT START BUT THE PROGRAM WORKS PERFECTLY. IF THE PROGRAM KEEPS WITH PROBLEMS TRY TO KILL THE SERVER AND START AGAIN.
+// IF THERE IS SOME ERROR IN THE POST WINDOW EXCECUTE THIS OPERATION AGAIN! SOMETIMES THERE A BUG THAT IT DOES NOT START BUT THE PROGRAM WORKS PERFECTLY. IF THE PROGRAM KEEPS WITH PROBLEMS TRY TO KILL THE SERVER AND START AGAIN!
 (
 ~cnt = 0;
 ~step = 1;
@@ -163,14 +164,14 @@ OSCdef(\stop, {|msg|
 ~amp = {
 	arg fundFreq, p_pose = 2;
 	var i = 0;
-	var n = 50;
+	var n = 10;
 	// Amplpitude array creation
 	a = Array.fill(n,{0});
     n.do({
 		a[i] =((2*p_pose.squared)/(squared(i+1)*pi.squared*(p_pose-1)))*sin((i+1)*pi/p_pose);
 		i = i+1;
 	});
-	// We normalize the array amplitude so that the sum of all the sinusoids is 1 (we apply a -3dB attenuation to avoid multiple notes playing at the same time and avoid clipping)
+	// We normalize the array amplitude so that the sum of all the sinusoids is 1 (we apply a -6dB attenuation to avoid clipping)
     a = a.normalizeSum * 0.5;
 	// return as an array both arrays
 	a;
@@ -179,7 +180,7 @@ OSCdef(\stop, {|msg|
 ~freq = {
 	arg fundFreq, stiffness = 0;
 	var i = 0;
-	var n = 50;
+	var n = 10;
 	// here we just divide by 1000 to have more sensibility on the input number
 	var stiffness_small = stiffness/(1000);
 	// This is a constant detune that will be applied to each frequency mode except the fundamental
