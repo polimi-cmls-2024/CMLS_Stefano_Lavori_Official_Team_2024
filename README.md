@@ -1,4 +1,4 @@
-# ProjectCMLS
+# ProjectCMLS - Stefano Lavori Official Team
 
 "Generative music is like gardening. You plant a seed, and then you watch the seed grow into something unpredictable and interesting."
 -Brian Eno
