@@ -7,7 +7,8 @@ s.boot;
 Server.killAll;
 s.reboot;
 
-VSTPlugin.search(s,"C:/Program Files/Common Files/VST3", options:(exclude: ["C:/Program Files/Common Files/VST3/Kairatune.vst3"]));
+VSTPlugin.search(s,"C:/Program Files/Common Files/VST3");
+//, options:(exclude: ["C:/Program Files/Common Files/VST3/Kairatune.vst3"]));
 
 
 // ----------- Second operation (2/4) -----------
@@ -65,7 +66,7 @@ OSCdef(\fromProcessing, { |msg|
 	Pdefn(\effect, ~dryWet);
 	Pdefn(\Pgrain, ~pitchGranulator);
 	(floor(msg[9]*10)/10).postln;
-}, '/vars');
+}, '/vars');//, ~scport);
 
 OSCdef(\loop, {|msg|
 	~loop = msg[1];

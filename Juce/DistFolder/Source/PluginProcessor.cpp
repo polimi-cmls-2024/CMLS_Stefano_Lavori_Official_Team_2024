@@ -162,14 +162,18 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state
-    //  
-    //float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
-    //float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
-    //float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
 
-    float fold_amount = params[0];
-    float dist_amount = params[1];
-    float dry_wet = params[2];
+    float fold_amount = apvts.getRawParameterValue("Folder Amount")->load();
+    float dist_amount = apvts.getRawParameterValue("Distortion Amount")->load();
+    float dry_wet = apvts.getRawParameterValue("Dry/Wet")->load();
+
+    if (oscNew)
+    {
+        fold_amount = params[0];
+        dist_amount = params[1];
+        dry_wet = params[2];
+    }
+
     
     for (float sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
@@ -177,12 +181,6 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         {
             float dry_sample = *buffer.getWritePointer(channel, sample);
 
-
-
-            //if (dry_sample * fold_amount <= 1 && dry_sample * fold_amount >= -1)
-            //{
-            //    continue;
-            //}
 
             *buffer.getWritePointer(channel, sample) *= fold_amount;
 
@@ -201,13 +199,9 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 }
             }
 
-            //*buffer.getWritePointer(channel, sample) = std::tanh(*buffer.getWritePointer(channel, sample))*dist_amount;
-
             *buffer.getWritePointer(channel, sample) = waveshaper.processSample(*buffer.getWritePointer(channel, sample) * dist_amount); //distortion implementation
                      
             *buffer.getWritePointer(channel, sample) = std::tanh(*buffer.getWritePointer(channel, sample) * dry_wet + dry_sample * (1.0f - dry_wet));
-   
-            //*buffer.getWritePointer(channel, sample) = juce::jlimit(-0.1f, 0.1f, *buffer.getWritePointer(channel, sample));
         }
     }
 }
@@ -215,7 +209,7 @@ void DistFolderAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 //==============================================================================
 bool DistFolderAudioProcessor::hasEditor() const
 {
-    return false; // (change this to false if you choose to not supply an editor)
+    return true; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* DistFolderAudioProcessor::createEditor()
@@ -247,36 +241,38 @@ void DistFolderAudioProcessor::oscMessageReceived(const juce::OSCMessage& messag
         params.set(0, message[0].getFloat32());
         params.set(1, message[1].getFloat32());
         params.set(2, message[2].getFloat32());
+
+        oscNew = true;
     }
 }
 
 
 
-//juce::AudioProcessorValueTreeState::ParameterLayout
-//DistFolderAudioProcessor::createParameterLayout()
-//{
-//    juce::AudioProcessorValueTreeState::ParameterLayout layout;
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Folder Amount", //ID
-//        "Folder Amount", //Name
-//        juce::NormalisableRange<float>(1.f, 60.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        1.f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Distortion Amount", //ID
-//        "Distortion Amount", //Name
-//        juce::NormalisableRange<float>(1.f, 1000.f, 1.f, 1.0f), //min, max, increment, skew factor
-//        1.f)); //default value
-//
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(
-//        "Dry/Wet", //ID
-//        "Dry/Wet", //Name
-//        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
-//        0.f)); //default value
-//
-//    return layout;
-//}
+juce::AudioProcessorValueTreeState::ParameterLayout
+DistFolderAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Folder Amount", //ID
+        "Folder Amount", //Name
+        juce::NormalisableRange<float>(1.f, 60.f, 0.1f, 1.f), //min, max, increment, skew factor
+        1.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Distortion Amount", //ID
+        "Distortion Amount", //Name
+        juce::NormalisableRange<float>(1.f, 200.f, 1.f, 1.0f), //min, max, increment, skew factor
+        1.f)); //default value
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Dry/Wet", //ID
+        "Dry/Wet", //Name
+        juce::NormalisableRange<float>(0.f, 1.f, 0.1f, 1.f), //min, max, increment, skew factor
+        0.f)); //default value
+
+    return layout;
+}
 
 //==============================================================================
 // This creates new instances of the plugin..

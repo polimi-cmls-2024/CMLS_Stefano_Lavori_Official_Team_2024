@@ -121,9 +121,6 @@ void FlangerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 
     l_smoother.reset(1);
     r_smoother.reset(1);
-
-    limiter.setThreshold(-6);
-    limiter.prepare(spec);
 }
 
 void FlangerAudioProcessor::releaseResources()
@@ -180,9 +177,6 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
 
-    //float* leftChannel = buffer.getWritePointer(0);
-    //float* rightChannel = buffer.getWritePointer(1);
-
     juce::dsp::AudioBlock<float> block(buffer);
     
     auto leftChannel = block.getSingleChannelBlock(0);
@@ -226,28 +220,8 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
 
-        /*switch (waveType)
-        {
-        case 0:
-            LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
-            break;
-        case 1:
-            LFO_out = squareWave(LFO_phase);
-            break;
-        case 2:
-            LFO_out = triangleWave(LFO_phase);
-            break;
-        case 3:
-            LFO_out = LFO_phase;
-            break;
-        default:
-            break;
-        }*/
-        
-
         //LFO waveform selection
         if (waveType == 0)
-            //LFO_out = std::sin(2 * juce::MathConstants<float>::pi * LFO_phase);
             LFO_out = std::sin(2 * PI * LFO_phase);
         else if (waveType == 1)
             LFO_out = squareWave(LFO_phase);
@@ -255,11 +229,6 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             LFO_out = triangleWave(LFO_phase);
         else if (waveType == 3)
             LFO_out = LFO_phase;
-
-
-
-
-        //LFO_out = std::sin(2 * PI * LFO_phase);
 
         LFO_phase += rate / getSampleRate(); //update LFO phase
 
@@ -278,20 +247,15 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         delayTimeSamples_l = delayTimeSmooth_l * getSampleRate();
         delayTimeSamples_r = delayTimeSmooth_r * getSampleRate();
 
-
-
-        //feedback_l = (1 - color) * feedback_l + color * drive_l;
-        //feedback_r = (1 - color) * feedback_r + color * drive_r;
-
-        //add feedbacks
-        //circularBufferLeft.get()[circularBufferWriteHead] = leftChannel[sample] + feedback_l;
-        //circularBufferRight.get()[circularBufferWriteHead] = rightChannel[sample] + feedback_r;
+        //add sample plus feedback to each circular buffer
         circularBufferLeft.get()[circularBufferWriteHead] = leftChannel.getSample(0,sample) + feedback_l;
         circularBufferRight.get()[circularBufferWriteHead] = rightChannel.getSample(0,sample) + feedback_r;
 
-        delayReadHead_l = circularBufferWriteHead - delayTimeSamples_l;//index to navigate delay buffer
+        //indexes to navigate circular buffer for delayed samples
+        delayReadHead_l = circularBufferWriteHead - delayTimeSamples_l;
         delayReadHead_r = circularBufferWriteHead - delayTimeSamples_r;
 
+        //wrapping
         if (delayReadHead_l < 0) {
             delayReadHead_l = circularBufferLength + delayReadHead_l;
         }
@@ -299,39 +263,11 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             delayReadHead_r = circularBufferLength + delayReadHead_r;
         }
 
-        
+        //get the actual flanged samples
         float delay_sample_left = std::tanh(circularBufferLeft.get()[(int)delayReadHead_l] + buffer.getSample(0, sample));
-        float delay_sample_right = std::tanh(circularBufferRight.get()[(int)delayReadHead_r] + buffer.getSample(1, sample));
+        float delay_sample_right = std::tanh(circularBufferRight.get()[(int)delayReadHead_r] + buffer.getSample(1, sample));      
 
-        //std::unique_ptr<float> delay_sample_left = nullptr; 
-        //float delay_sample_right;
-
-        //std::unique_ptr<float> tmp = nullptr;
-        //tmp.get()[0] = circularBufferLeft.get()[(int)delayReadHead_l];
-        //tmp.get()[1] = circularBufferLeft.get()[(int)delayReadHead_l];
-        //
-        //linearInterpolator.process((double)2, *tmp, *delay_sample_left, 1, (int)circularBufferLength, (int)circularBufferLength);
-        
-        //int readHeadInt_xl = (int)delayReadHead_l;
-        //int readHeadInt_xr = (int)delayReadHead_r;
-        //float readHeadRemainderFloat_l = delayReadHead_l - readHeadInt_xl;
-        //float readHeadRemainderFloat_r = delayReadHead_r - readHeadInt_xr;
-        //
-        ////Wrapping around circular buffer if we are over the length
-        //if (readHeadInt_xl >= circularBufferLength) {
-        //    readHeadInt_xl -= circularBufferLength; 
-        //}
-        //if (readHeadInt_xr >= circularBufferLength) {
-        //    readHeadInt_xr -= circularBufferLength; 
-        //}
-
-        ////float tmp = circularBufferLeft.get()[(readHeadInt_xl + 1)];
-        //
-        //float delay_sample_left = linear_interp(circularBufferLeft.get()[readHeadInt_xl], circularBufferLeft.get()[(readHeadInt_xl + 1)], readHeadRemainderFloat_l);
-        //float delay_sample_right = linear_interp(circularBufferRight.get()[readHeadInt_xr], circularBufferRight.get()[(readHeadInt_xr + 1)], readHeadRemainderFloat_r);
-
-        
-
+        //calculate feedbacks for next sample
         feedback_l = delay_sample_left * feedback;
         feedback_r = delay_sample_right * feedback;
         
@@ -342,29 +278,20 @@ void FlangerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         feedback_l = (1 - color) * feedback_l + color * drive_l;
         feedback_r = (1 - color) * feedback_r + color * drive_r;
         
+        //smoothing on the outputs
         l_smoother.setTargetValue(buffer.getSample(0, sample) * (1 - (drywet)) + delay_sample_left * (drywet));
         r_smoother.setTargetValue(buffer.getSample(1, sample) * (1 - (drywet)) + delay_sample_right * (drywet));
 
-        //leftChannel.setSample(0, sample, );
-        //rightChannel.setSample(0, sample, );
-
+        //set outputs
         leftChannel.setSample(0, sample, l_smoother.getNextValue());
         rightChannel.setSample(0, sample, r_smoother.getNextValue());
 
-        //leftChannel.setSample(0, sample, delay_sample_left);
-        //rightChannel.setSample(0, sample, delay_sample_right);
-
+        //increment on buffer head for next cycle
         circularBufferWriteHead++;
         if (circularBufferWriteHead >= circularBufferLength) {
             circularBufferWriteHead = 0;
         }  
     }
-
-    //juce::dsp::ProcessContextReplacing<float> leftCtxt(leftChannel);
-    //juce::dsp::ProcessContextReplacing<float> rightCtxt(rightChannel);
-
-    //limiter.process(leftCtxt);
-    //limiter.process(rightCtxt);
 }
 
 //==============================================================================
@@ -393,6 +320,7 @@ void FlangerAudioProcessor::setStateInformation(const void* data, int sizeInByte
     // whose contents will have been created by the getStateInformation() call.
 }
 
+//function to handle OSC messages
 void FlangerAudioProcessor::oscMessageReceived(const juce::OSCMessage& message)
 {
     if (message.size() == 8)

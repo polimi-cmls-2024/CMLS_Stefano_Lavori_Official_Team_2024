@@ -59,15 +59,16 @@ public:
     void oscMessageReceived (const juce::OSCMessage& message) override;
 
     //==============================================================================
-    //static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    //juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
+private:
+    //==============================================================================
     juce::Array<float> params;
 
     juce::dsp::WaveShaper<float> waveshaper;
 
-private:
-    //==============================================================================
+    bool oscNew = false;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistFolderAudioProcessor)
 };

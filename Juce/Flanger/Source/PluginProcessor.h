@@ -62,10 +62,8 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
-    float squareWave(float x) {
-
-        //x = juce::jmap(x, (float)(-4.0f * PI), (float)(4.0f * PI), -1.0f, 1.0f);
-
+    float squareWave(float x) 
+    {
         if (x >= -1 && x < 0) {
             x = -1;
         }
@@ -77,7 +75,6 @@ public:
     }
 
     float triangleWave(float x) {
-        /*x = juce::jmap(x, (float)(-4.0f * PI), (float)(4.0f * PI), -2.0f, 2.0f);*/
         x *= 2;
 
         if (x <= 0.f) {
@@ -87,10 +84,6 @@ public:
             x = (1.0f - x)/ 2.f;
         }
         return x;
-    }
-
-    float linear_interp(float sample_x, float sample_x1, float inPhase) {
-        return (1 - inPhase) * sample_x + inPhase * sample_x1;
     }
 
     void oscMessageReceived(const juce::OSCMessage& message) override;
@@ -122,8 +115,6 @@ private:
     bool oscNew = false;
 
     juce::dsp::ProcessSpec spec;
-
-    juce::dsp::Limiter<float> limiter;
 
     juce::Array<float> params;
 
